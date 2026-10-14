@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biomechanics Simulator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Condensed:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0b1630;--navy-2:#15284f;--lime:#c6f25b;--page:#f2f4f9;--card:#fff;--ink:#0f1a2e;--muted:#5a6680;--line:#e1e6ef;--accent:#2952e3;
+  --ok:#15803d;--bad:#b42318;--purple:#5b34c7;
+  --display:'Barlow Condensed','Arial Narrow',Arial,sans-serif;--body:'Barlow','Segoe UI',Arial,sans-serif;--mono:'JetBrains Mono',ui-monospace,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:var(--body);font-size:15px;color:var(--ink);background:var(--page);line-height:1.45}
+.teacher-banner{display:none;background:#f59e0b;color:#2b1700;font-weight:700;text-align:center;padding:5px;font-size:13px}
+body.teacher .teacher-banner{display:block}
+header.top{background:linear-gradient(120deg,var(--navy),var(--navy-2));color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:20;box-shadow:0 3px 0 var(--lime)}
+.brand h1{font-family:var(--display);font-weight:800;font-size:30px;letter-spacing:.02em;text-transform:uppercase;margin:0;line-height:1}
+.brand h1 span{color:var(--lime)}
+.brand p{margin:4px 0 0;color:#aeb9d3;font-size:13.5px}
+.modes{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.seg{display:inline-flex;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:10px;padding:3px}
+.seg button{border:0;background:transparent;color:#cdd6ea;font:700 14px var(--body);padding:7px 14px;border-radius:8px;cursor:pointer}
+.seg button.on{background:var(--lime);color:var(--navy)}
+.switch{display:inline-flex;align-items:center;gap:8px;font-weight:600;font-size:14px;color:#cdd6ea;cursor:pointer;user-select:none}
+.switch input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:11px;background:rgba(255,255,255,.22);position:relative;cursor:pointer;transition:.2s;margin:0}
+.switch input::after{content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s}
+.switch input:checked{background:#f59e0b}.switch input:checked::after{left:19px}
+.layout{display:grid;grid-template-columns:230px minmax(0,1fr);gap:22px;padding:20px 22px 44px;max-width:1580px;margin:0 auto}
+nav.side{position:sticky;top:96px;align-self:start;display:flex;flex-direction:column;gap:3px}
+.nav-label{font:700 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:2px 10px 8px}
+.nav-item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:transparent;padding:9px 10px;border-radius:10px;font:600 14.5px var(--body);color:var(--ink);cursor:pointer;border-left:3px solid transparent}
+.nav-item:hover{background:#e6eaf3}
+.nav-item.active{background:var(--navy);color:#fff;border-left-color:var(--lime)}
+.nav-icon{width:22px;text-align:center;flex:0 0 22px}
+.nav-name{flex:1}
+.nav-tick{opacity:0;color:var(--ok);font-weight:800}
+.nav-item.active .nav-tick{color:var(--lime)}
+.nav-item.done .nav-tick{opacity:1}
+.nav-foot{margin:14px 10px 0;font-size:12.5px;color:var(--muted)}
+.flow{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 16px}
+.flow span{background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--muted);font-weight:600}
+.flow b{display:inline-grid;place-items:center;width:18px;height:18px;border-radius:50%;background:var(--navy);color:var(--lime);font-size:11px;margin-right:6px}
+.panel{display:none}.panel.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.panel-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.head-text{max-width:780px}
+.eyebrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:6px}
+.chip{font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:#e3e9fb;color:#24409a}
+.chip.ib{background:#fff1d6;color:#8a5300}
+.panel-head h2{font-family:var(--display);font-size:38px;font-weight:800;text-transform:uppercase;margin:0;letter-spacing:.01em;line-height:1.02}
+.def{margin:6px 0 0;color:#2c3953;font-size:15.5px}
+.formula{font-family:var(--mono);font-size:14px;font-weight:700;background:var(--navy);color:var(--lime);padding:11px 15px;border-radius:10px;white-space:nowrap}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 1px 2px rgba(15,26,46,.04),0 8px 24px rgba(15,26,46,.05)}
+.card h3{font-family:var(--display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;margin:0 0 10px}
+.lab{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.stage-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.stage-top{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.stage-top h3{margin:0}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;font-weight:600;color:var(--muted)}
+.legend i{display:inline-block;width:18px;height:5px;border-radius:3px;margin-right:5px;vertical-align:middle}
+canvas{display:block;width:100%;height:auto;border-radius:12px}
+.graph canvas{border:1px solid var(--line)}
+.note{font-size:13px;color:var(--muted);margin:8px 0 0}
+.graph-note{font-size:13px;color:var(--muted)}
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin-top:12px}
+.metric{background:var(--navy);border-radius:10px;padding:9px 12px;color:#fff;position:relative}
+.m-label{display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#93a3c4}
+.m-val{display:block;font-family:var(--mono);font-size:18px;font-weight:700;margin-top:3px;transition:filter .2s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel.predicting .metric.hideable .m-val{filter:blur(7px)}
+.panel.predicting .working .work{filter:blur(6px)}
+.controls{position:sticky;top:96px}
+.ctrl{margin-bottom:12px}
+.ctrl label{font-weight:600;font-size:14px}
+.ctrl-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.ctrl output{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);background:#eef2fd;padding:2px 7px;border-radius:6px;white-space:nowrap}
+select,input[type=number],textarea{width:100%;font:500 14px var(--body);padding:8px 10px;border:1px solid #cfd7e5;border-radius:9px;background:#fff;color:var(--ink)}
+.ctrl select{margin-top:4px}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:24px;background:transparent;margin:4px 0 0;--p:50%}
+input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--accent) var(--p),#dde3ee var(--p))}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;border:3px solid var(--accent);margin-top:-7px;box-shadow:0 2px 6px rgba(41,82,227,.35)}
+input[type=range]::-moz-range-track{height:6px;border-radius:3px;background:#dde3ee}
+input[type=range]::-moz-range-progress{height:6px;border-radius:3px;background:var(--accent)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:#fff;border:3px solid var(--accent)}
+input[type=range]:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.preset{margin-bottom:14px;padding-bottom:14px;border-bottom:1px dashed var(--line)}
+.preset label{font-weight:700;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.predict{background:#f5f2ff;border:1px solid #ddd3fb;border-radius:12px;padding:12px;margin:14px 0 12px}
+.p-head{font-weight:800;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--purple)}
+.p-q{margin:4px 0 8px;font-size:14px;font-weight:600}
+.p-row{display:flex;gap:6px;align-items:center}
+.p-row .unit{font-weight:600;color:var(--muted)}
+.p-out{font-size:13.5px;font-weight:600;margin-top:8px}
+.p-out:empty{display:none}
+.p-out.ok{color:var(--ok)}.p-out.bad{color:var(--bad)}.p-out.info{color:var(--purple)}
+.btn{border:0;border-radius:10px;font:700 15px var(--body);padding:10px 16px;cursor:pointer;transition:transform .1s,box-shadow .2s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--navy);color:var(--lime);flex:1}
+.btn.primary:hover{box-shadow:0 6px 16px rgba(11,22,48,.3)}
+.btn.ghost{background:#eef1f7;color:var(--ink)}
+.btn.small{padding:8px 12px;font-size:13.5px;background:var(--purple);color:#fff;white-space:nowrap}
+.btn.small.locked{background:#e9e4fb;color:var(--purple)}
+.btn.tiny{padding:6px 10px;font-size:13px;background:#fff;border:1px solid #f0d58f;color:#7a4a00;margin-top:6px}
+.btn-row{display:flex;gap:8px}
+.challenge{margin-top:14px;background:#fff8e6;border:1px solid #f6dfa4;border-radius:12px;padding:12px;font-size:13.5px}
+.challenge h4{margin:0 0 4px;font-size:12.5px;text-transform:uppercase;letter-spacing:.06em;color:#8a5300}
+.challenge p{margin:4px 0}
+.challenge .win{color:var(--ok);font-weight:700}
+.learn{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;margin-top:16px;align-items:start}
+.side-learn{display:flex;flex-direction:column;gap:16px}
+.q{padding:12px 0;border-top:1px solid var(--line)}
+.q:first-of-type{border-top:0;padding-top:0}
+.q-text{font-weight:600;margin:0 0 8px}
+.q-row{display:flex;gap:8px}
+.q-row .btn{background:var(--navy);color:#fff;padding:8px 14px;font-size:14px}
+.q-fb{font-size:13.5px;font-weight:600;margin-top:6px}
+.q-fb:empty{display:none}
+.q-fb.ok{color:var(--ok)}.q-fb.bad{color:var(--bad)}
+.teacher-only{display:none}
+body.teacher .teacher-only{display:block}
+.why{margin-top:6px;font-size:13px;background:#fff8e6;border-left:3px solid #f59e0b;padding:6px 10px;border-radius:0 8px 8px 0;color:#6b4300}
+details.working summary{cursor:pointer;font-family:var(--display);font-size:20px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;list-style:none}
+details.working summary::-webkit-details-marker{display:none}
+details.working summary::after{content:'  +';color:var(--muted)}
+details.working[open] summary::after{content:'  −'}
+.work{font-family:var(--mono);font-size:13.5px;line-height:1.75;margin-top:10px;color:#24324d;transition:filter .2s}
+.work b{color:var(--ink)}
+.exam-item{padding:12px 0;border-top:1px solid var(--line)}
+.exam-item:first-of-type{border-top:0;padding-top:0}
+.exam-q{font-weight:500;margin:0 0 8px}
+.marks{display:inline-block;font-size:12px;font-weight:700;background:var(--navy);color:var(--lime);padding:2px 8px;border-radius:6px;margin-left:6px;white-space:nowrap}
+.course-tag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.06em;color:var(--muted);margin-right:6px}
+.cmd{font-weight:800;color:var(--purple)}
+.exam-item textarea{min-height:72px;resize:vertical}
+.scheme{margin-top:8px;background:#fff8e6;border:1px solid #f6dfa4;border-radius:10px;padding:8px 12px;font-size:13.5px}
+.scheme ol{margin:4px 0 0;padding-left:20px}
+body[data-view=vce] [data-course=ib]{display:none!important}
+body[data-view=ib] [data-course=vce]{display:none!important}
+@media(max-width:1200px){.lab{grid-template-columns:1fr}.controls{position:static}.learn{grid-template-columns:1fr}}
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr;padding:12px 14px 30px;gap:14px}
+  nav.side{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:6px}
+  .nav-label,.nav-foot{display:none}
+  .nav-item{width:auto;white-space:nowrap;flex:0 0 auto;background:#fff;border:1px solid var(--line)}
+  .panel-head h2{font-size:28px}.formula{white-space:normal}
+  header.top{position:static}
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+</style>
+</head>
+<body data-view="vce">
+<div class="teacher-banner">Teacher mode: model answers and marking guides are showing</div>
+<header class="top">
+  <div class="brand">
+    <h1>Biomechanics <span>Simulator</span></h1>
+    <p>VCE Physical Education · IB Sport, Exercise and Health Science</p>
+  </div>
+  <div class="modes">
+    <div class="seg" role="group" aria-label="Course">
+      <button id="vceBtn" class="on" type="button">VCE</button>
+      <button id="ibBtn" type="button">IB</button>
+    </div>
+    <label class="switch"><input id="teacherToggle" type="checkbox">Teacher mode</label>
+  </div>
+</header>
+<div class="layout">
+  <nav class="side" id="nav" aria-label="Topics"><div class="nav-label">Topics</div></nav>
+  <main>
+    <div class="flow" aria-label="How to use"><span><b>1</b>Predict</span><span><b>2</b>Change one variable</span><span><b>3</b>Run it</span><span><b>4</b>Explain using the numbers</span></div>
+    <div id="panels"></div>
+  </main>
+</div>
+<script>
+(function(){
+'use strict';
+/* =========================================================
+   CORE HELPERS
+   ========================================================= */
+const $=id=>document.getElementById(id);
+const g=9.8;
+const FONT='Barlow,"Segoe UI",Arial,sans-serif';
+// Canvas (dark scene) colours — one colour language everywhere
+const C={force:'#ff5c74',vel:'#4cc3ff',mom:'#b991ff',fric:'#3ee08f',norm:'#d5dce8',text:'#e8eef9',dim:'rgba(232,238,249,.6)',gold:'#ffd166',teamA:'#facc15',teamB:'#2dd4bf'};
+// Graph (light) colours
+const GC={force:'#e11d48',vel:'#0284c7',mom:'#7c3aed',fric:'#059669',amber:'#d97706',ink:'#0f1a2e',teal:'#0d9488',gold:'#ca8a04'};
+const fmt=(v,d=1)=>Number.isFinite(v)?(Math.abs(v)<0.5*Math.pow(10,-d)?(0).toFixed(d):v.toFixed(d)):'—';
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const store={get(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+function sci(x){if(!x)return '0';const e=Math.floor(Math.log10(Math.abs(x)));const m=x/Math.pow(10,e);const sup={'-':'⁻','0':'⁰','1':'¹','2':'²','3':'³','4':'⁴','5':'⁵','6':'⁶','7':'⁷','8':'⁸','9':'⁹'};return m.toFixed(1)+' × 10'+String(e).split('').map(c=>sup[c]).join('');}
+function shade(hex,f){const h=hex.replace('#','');if(h.length!==6)return hex;const n=parseInt(h,16);const r=Math.round(((n>>16)&255)*f),gg=Math.round(((n>>8)&255)*f),b=Math.round((n&255)*f);return 'rgb('+r+','+gg+','+b+')';}
+
+function setupCanvas(cv,w,h){const dpr=Math.min(window.devicePixelRatio||1,2);cv.width=w*dpr;cv.height=h*dpr;const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);ctx.W=w;ctx.H=h;return ctx;}
+function animator(stepFn){let raf=0,last=0,on=false;return{start(){cancelAnimationFrame(raf);on=true;last=performance.now();const loop=now=>{if(!on)return;const dt=Math.min(0.05,(now-last)/1000);last=now;if(stepFn(dt)===false){on=false;return;}raf=requestAnimationFrame(loop);};raf=requestAnimationFrame(loop);},stop(){on=false;cancelAnimationFrame(raf);},get running(){return on;}};}
+
+/* ---------- drawing primitives ---------- */
+function roundRect(ctx,x,y,w,h,r){r=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+function sky(ctx){const W=ctx.W,H=ctx.H;const gr=ctx.createLinearGradient(0,0,0,H);gr.addColorStop(0,'#071125');gr.addColorStop(1,'#1a3363');ctx.fillStyle=gr;ctx.fillRect(0,0,W,H);
+  [W*0.1,W*0.9].forEach(x=>{const r=ctx.createRadialGradient(x,-30,10,x,-30,300);r.addColorStop(0,'rgba(255,250,220,.20)');r.addColorStop(1,'rgba(255,250,220,0)');ctx.fillStyle=r;ctx.fillRect(0,0,W,H);});}
+function ground(ctx,gy,kind){const W=ctx.W,H=ctx.H;
+  if(kind==='grass'||kind==='turf'||kind==='wet'){const n=14,c1=kind==='turf'?'#2fa35a':kind==='wet'?'#21673a':'#2c8b48',c2=kind==='turf'?'#37b363':kind==='wet'?'#267443':'#33994f';for(let i=0;i<n;i++){ctx.fillStyle=i%2?c1:c2;ctx.fillRect(i*W/n,gy,W/n+1,H-gy);}
+    if(kind==='wet'){ctx.fillStyle='rgba(180,220,255,.12)';for(let i=0;i<40;i++){ctx.fillRect((i*97)%W,gy+8+(i*37)%(H-gy-10),18,2);}}
+    ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(0,gy,W,3);}
+  else if(kind==='court'||kind==='dusty'){ctx.fillStyle=kind==='dusty'?'#b48a5e':'#c98b4f';ctx.fillRect(0,gy,W,H-gy);ctx.strokeStyle='rgba(90,50,20,.22)';ctx.lineWidth=1;for(let x=0;x<W;x+=56){ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x,H);ctx.stroke();}
+    if(kind==='dusty'){ctx.fillStyle='rgba(255,240,210,.18)';for(let i=0;i<60;i++)ctx.fillRect((i*83)%W,gy+4+(i*29)%(H-gy-6),3,3);}
+    ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(0,gy,W,3);}
+  else if(kind==='ice'){const gr=ctx.createLinearGradient(0,gy,0,H);gr.addColorStop(0,'#e8f5ff');gr.addColorStop(1,'#bcdcf2');ctx.fillStyle=gr;ctx.fillRect(0,gy,W,H-gy);ctx.strokeStyle='rgba(255,255,255,.7)';ctx.lineWidth=1;for(let i=0;i<12;i++){ctx.beginPath();ctx.moveTo((i*131)%W,gy+6+(i*17)%30);ctx.lineTo((i*131)%W+60,gy+10+(i*17)%30);ctx.stroke();}}
+  else if(kind==='mat'){ctx.fillStyle='#1f5fbf';ctx.fillRect(0,gy,W,H-gy);ctx.fillStyle='#4f8ff0';ctx.fillRect(0,gy,W,6);}
+  else if(kind==='track'){ctx.fillStyle='#b5452f';ctx.fillRect(0,gy,W,H-gy);ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillRect(0,gy,W,3);}
+  else if(kind==='earth'){const gr=ctx.createLinearGradient(0,gy,0,H);gr.addColorStop(0,'#6b4a2f');gr.addColorStop(1,'#3b2717');ctx.fillStyle=gr;ctx.fillRect(0,gy,W,H-gy);ctx.fillStyle='#c98b4f';ctx.fillRect(0,gy,W,8);}
+  else{ctx.fillStyle='#2a3b5f';ctx.fillRect(0,gy,W,H-gy);ctx.fillStyle='#94a3b8';ctx.fillRect(0,gy,W,2);}
+}
+function tag(ctx,text,x,y,color,align='center'){ctx.font='700 13px '+FONT;const w=ctx.measureText(text).width+12;let bx=align==='center'?x-w/2:align==='right'?x-w:x;bx=clamp(bx,4,ctx.W-w-4);roundRect(ctx,bx,y-11,w,22,6);ctx.fillStyle='rgba(6,14,32,.8)';ctx.fill();ctx.fillStyle=color;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(text,bx+6,y+1);ctx.textBaseline='alphabetic';}
+function badge(ctx,text,x,y,color){ctx.font='800 16px '+FONT;const w=ctx.measureText(text).width+28;roundRect(ctx,clamp(x-w/2,6,ctx.W-w-6),y-16,w,32,16);ctx.fillStyle=color;ctx.fill();ctx.fillStyle='#06101f';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(text,clamp(x,w/2+6,ctx.W-w/2-6),y+1);ctx.textAlign='left';ctx.textBaseline='alphabetic';}
+function hud(ctx,lines,x=14,y=14){ctx.font='600 13px '+FONT;const w=Math.max(...lines.map(l=>ctx.measureText(l).width))+20;roundRect(ctx,x,y,w,lines.length*19+12,8);ctx.fillStyle='rgba(5,12,28,.6)';ctx.fill();ctx.fillStyle=C.text;ctx.textBaseline='top';ctx.textAlign='left';lines.forEach((l,i)=>ctx.fillText(l,x+10,y+8+i*19));ctx.textBaseline='alphabetic';}
+function arrow(ctx,x1,y1,x2,y2,color,text,o={}){const len=Math.hypot(x2-x1,y2-y1);if(len<1)return;const a=Math.atan2(y2-y1,x2-x1),hd=Math.min(14,len*.75),lw=o.lw||5;
+  ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';if(o.dash)ctx.setLineDash(o.dash);
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2-Math.cos(a)*hd*.8,y2-Math.sin(a)*hd*.8);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-hd*Math.cos(a-.5),y2-hd*Math.sin(a-.5));ctx.lineTo(x2-hd*Math.cos(a+.5),y2-hd*Math.sin(a+.5));ctx.closePath();ctx.fill();ctx.restore();
+  if(text){let lx,ly,al;const horiz=Math.abs(Math.cos(a))>.5;
+    if(o.lx!=null){lx=o.lx;ly=o.ly;al=o.align||'center';}
+    else if(horiz){lx=(x1+x2)/2;ly=(y1+y2)/2+(o.below?22:-22);al='center';}
+    else if(o.left){lx=Math.min(x1,x2)-12;ly=(y1+y2)/2;al='right';}
+    else{lx=Math.max(x1,x2)+12;ly=(y1+y2)/2;al='left';}
+    tag(ctx,text,lx,ly,color,al);}}
+function arcArrow(ctx,x,y,r,a0,a1,color,lw=4){ctx.save();ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';const ccw=a1<a0;ctx.beginPath();ctx.arc(x,y,r,a0,a1,ccw);ctx.stroke();
+  const ex=x+r*Math.cos(a1),ey=y+r*Math.sin(a1);const tx=ccw?Math.sin(a1):-Math.sin(a1),ty=ccw?-Math.cos(a1):Math.cos(a1);const nx=Math.cos(a1),ny=Math.sin(a1),hd=12;
+  ctx.beginPath();ctx.moveTo(ex+tx*hd*.7,ey+ty*hd*.7);ctx.lineTo(ex-tx*hd*.4+nx*hd*.55,ey-ty*hd*.4+ny*hd*.55);ctx.lineTo(ex-tx*hd*.4-nx*hd*.55,ey-ty*hd*.4-ny*hd*.55);ctx.closePath();ctx.fill();ctx.restore();}
+function shadowEllipse(ctx,x,gy,r){ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(x,gy+2,r*1.1,r*.28,0,0,Math.PI*2);ctx.fill();}
+function ball(ctx,x,y,r,kind){
+  const base={soccer:'#f1f5f9',basketball:'#e8742a',shot:'#8d97a5',cricket:'#c0262d',tennis:'#d9f23f',netball:'#f8fafc',volleyball:'#f8fafc',medicine:'#6b4a2f',squash:'#1f2937',afl:'#b4372a'}[kind]||kind;
+  ctx.save();
+  if(kind==='puck'){ctx.fillStyle='#0f172a';roundRect(ctx,x-r,y-r*.4,2*r,r*.8,r*.25);ctx.fill();ctx.strokeStyle='#64748b';ctx.lineWidth=2;ctx.stroke();ctx.restore();return;}
+  if(kind==='afl'){const gr=ctx.createRadialGradient(x-r*.4,y-r*.3,r*.1,x,y,r*1.4);gr.addColorStop(0,'#e36a5a');gr.addColorStop(1,'#7a2117');ctx.fillStyle=gr;ctx.beginPath();ctx.ellipse(x,y,r*1.35,r*.85,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x-r*.5,y-r*.15);ctx.lineTo(x+r*.5,y-r*.15);ctx.stroke();for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(x+i*r*.2,y-r*.28);ctx.lineTo(x+i*r*.2,y-r*.02);ctx.stroke();}ctx.restore();return;}
+  const gr=ctx.createRadialGradient(x-r*.35,y-r*.35,r*.1,x,y,r);gr.addColorStop(0,'rgba(255,255,255,.95)');gr.addColorStop(.28,base);gr.addColorStop(1,shade(base.startsWith('#')?base:'#888888',.62));
+  ctx.fillStyle=gr;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.save();ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.clip();
+  if(kind==='soccer'){ctx.fillStyle='#1e293b';ctx.beginPath();for(let k=0;k<5;k++){const a=-Math.PI/2+k*2*Math.PI/5;ctx.lineTo(x+Math.cos(a)*r*.32,y+Math.sin(a)*r*.32);}ctx.closePath();ctx.fill();for(let k=0;k<5;k++){const a=-Math.PI/2+Math.PI/5+k*2*Math.PI/5;ctx.beginPath();ctx.arc(x+Math.cos(a)*r*.95,y+Math.sin(a)*r*.95,r*.3,0,Math.PI*2);ctx.fill();}}
+  else if(kind==='basketball'){ctx.strokeStyle='rgba(60,25,5,.85)';ctx.lineWidth=Math.max(1.2,r*.08);ctx.beginPath();ctx.moveTo(x-r,y);ctx.lineTo(x+r,y);ctx.moveTo(x,y-r);ctx.lineTo(x,y+r);ctx.stroke();ctx.beginPath();ctx.arc(x-r*1.05,y,r*.75,-1.1,1.1);ctx.stroke();ctx.beginPath();ctx.arc(x+r*1.05,y,r*.75,Math.PI-1.1,Math.PI+1.1);ctx.stroke();}
+  else if(kind==='cricket'){ctx.strokeStyle='rgba(255,255,255,.85)';ctx.lineWidth=1.4;ctx.setLineDash([2,2]);ctx.beginPath();ctx.moveTo(x-r*.15,y-r);ctx.quadraticCurveTo(x+r*.25,y,x-r*.15,y+r);ctx.stroke();ctx.setLineDash([]);}
+  else if(kind==='tennis'){ctx.strokeStyle='rgba(255,255,255,.95)';ctx.lineWidth=Math.max(1.5,r*.12);ctx.beginPath();ctx.arc(x-r*1.1,y,r*.85,-.9,.9);ctx.stroke();ctx.beginPath();ctx.arc(x+r*1.1,y,r*.85,Math.PI-.9,Math.PI+.9);ctx.stroke();}
+  else if(kind==='volleyball'||kind==='netball'){ctx.strokeStyle=kind==='volleyball'?'rgba(37,99,235,.7)':'rgba(100,116,139,.6)';ctx.lineWidth=1.6;for(let k=0;k<3;k++){const a=k*2*Math.PI/3;ctx.beginPath();ctx.moveTo(x,y);ctx.quadraticCurveTo(x+Math.cos(a+.6)*r*.7,y+Math.sin(a+.6)*r*.7,x+Math.cos(a)*r,y+Math.sin(a)*r);ctx.stroke();}}
+  else if(kind==='squash'){ctx.fillStyle='#facc15';ctx.beginPath();ctx.arc(x+r*.35,y-r*.35,r*.16,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x+r*.05,y-r*.45,r*.16,0,Math.PI*2);ctx.fill();}
+  ctx.restore();ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.restore();}
+function limb(ctx,pts,color,w){ctx.strokeStyle=color;ctx.lineWidth=w;ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));ctx.stroke();}
+const POSES={
+  stand:{hip:[0,-92],neck:[0,-150],head:[0,-171],k1:[-5,-48],f1:[-9,-2],k2:[6,-48],f2:[11,-2],e1:[-13,-122],h1:[-17,-95],e2:[13,-122],h2:[17,-95]},
+  crouch:{hip:[-16,-62],neck:[12,-116],head:[20,-136],k1:[18,-44],f1:[-4,-2],k2:[24,-42],f2:[4,-2],e1:[-12,-94],h1:[-28,-78],e2:[-6,-94],h2:[-22,-76]},
+  jump:{hip:[0,-100],neck:[0,-158],head:[0,-179],k1:[-3,-56],f1:[-4,-10],k2:[3,-56],f2:[6,-8],e1:[-9,-186],h1:[-11,-212],e2:[9,-186],h2:[11,-212]},
+  tackle:{hip:[0,-86],neck:[34,-138],head:[46,-155],k1:[22,-45],f1:[-6,-2],k2:[-10,-44],f2:[-26,-2],e1:[56,-126],h1:[76,-118],e2:[52,-116],h2:[72,-106]},
+  lean:{hip:[-12,-88],neck:[-34,-144],head:[-42,-163],k1:[12,-46],f1:[36,-2],k2:[-22,-50],f2:[-30,-12],e1:[-56,-138],h1:[-76,-126],e2:[-12,-124],h2:[6,-110]}
+};
+function athlete(ctx,x,gy,h,color,pose='stand',ph=0,face=1){
+  let P;
+  if(pose==='run'){const s=Math.sin(ph),s2=-s;P={hip:[0,-92],neck:[12,-150],head:[19,-170],
+    k1:[8+18*s,-50],f1:[-6+34*s,-6-Math.max(0,s)*16],k2:[8+18*s2,-50],f2:[-6+34*s2,-6-Math.max(0,s2)*16],
+    e1:[12-16*s,-122],h1:[26-12*s,-104],e2:[12-16*s2,-122],h2:[26-12*s2,-104]};}
+  else P=POSES[pose]||POSES.stand;
+  const s=h/180;ctx.save();ctx.translate(x,gy);ctx.scale(s*face,s);ctx.lineCap='round';ctx.lineJoin='round';
+  const dk=shade(color,.68);
+  limb(ctx,[P.hip,P.k2,P.f2],dk,14);limb(ctx,[P.neck,P.e2,P.h2],dk,11);
+  limb(ctx,[P.hip,P.neck],color,26);
+  limb(ctx,[P.hip,P.k1,P.f1],color,15);limb(ctx,[P.neck,P.e1,P.h1],color,12);
+  ctx.fillStyle='#f1c9a0';ctx.beginPath();ctx.arc(P.head[0],P.head[1],17,0,Math.PI*2);ctx.fill();
+  ctx.restore();}
+function boot(ctx,x,y){ctx.save();ctx.translate(x,y);
+  ctx.fillStyle='#1e3a8a';ctx.fillRect(-66,-104,18,64);
+  ctx.fillStyle='#e5e7eb';ctx.beginPath();ctx.moveTo(0,6);ctx.quadraticCurveTo(3,-10,-16,-13);ctx.lineTo(-42,-16);ctx.lineTo(-46,-44);ctx.lineTo(-70,-44);ctx.lineTo(-70,8);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ff5c74';ctx.fillRect(-60,-8,30,4);ctx.fillStyle='#111827';ctx.fillRect(-70,7,72,6);ctx.restore();}
+function hands(ctx,x,y){ctx.save();ctx.translate(x,y);ctx.fillStyle='#e8b98c';roundRect(ctx,16,-13,90,26,9);ctx.fill();ctx.fillStyle='#f5d0a9';roundRect(ctx,0,-24,30,48,12);ctx.fill();ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(8,-6,16,2);ctx.fillRect(8,2,16,2);ctx.restore();}
+
+/* ---------- graph ---------- */
+function niceStep(raw){if(!(raw>0))return 1;const p=Math.pow(10,Math.floor(Math.log10(raw)));const n=raw/p;return(n<1.5?1:n<3.5?2:n<7.5?5:10)*p;}
+function decs(step){return step>=1?0:step>=0.1?1:2;}
+function plot(ctx,o){
+  const W=ctx.W,H=ctx.H;ctx.clearRect(0,0,W,H);ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  const L=66,R=18,T=38,B=46,pw=W-L-R,ph=H-T-B;
+  const xMax=o.xMax>0?o.xMax:1,yMin=o.yMin||0,yMax=o.yMax>yMin?o.yMax:yMin+1;
+  const X=x=>L+x/xMax*pw,Y=y=>T+(yMax-y)/(yMax-yMin)*ph;
+  const xs=niceStep(xMax/7),ys=niceStep((yMax-yMin)/5);
+  ctx.font='500 12px '+FONT;ctx.fillStyle='#5a6680';ctx.strokeStyle='#e8edf4';ctx.lineWidth=1;ctx.textAlign='center';ctx.textBaseline='top';
+  for(let i=0;i*xs<=xMax+1e-9;i++){const x=i*xs;ctx.beginPath();ctx.moveTo(X(x),T);ctx.lineTo(X(x),T+ph);ctx.stroke();ctx.fillText(x.toFixed(decs(xs)),X(x),T+ph+6);}
+  ctx.textAlign='right';ctx.textBaseline='middle';
+  const y0i=Math.ceil(yMin/ys-1e-9);for(let i=y0i;i*ys<=yMax+1e-9;i++){const y=i*ys;ctx.beginPath();ctx.moveTo(L,Y(y));ctx.lineTo(L+pw,Y(y));ctx.stroke();ctx.fillText(y.toFixed(decs(ys)),L-8,Y(y));}
+  ctx.strokeStyle='#94a3b8';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(L,T);ctx.lineTo(L,T+ph);ctx.stroke();
+  const yz=Y(clamp(0,yMin,yMax));ctx.beginPath();ctx.moveTo(L,yz);ctx.lineTo(L+pw,yz);ctx.stroke();
+  ctx.fillStyle='#334155';ctx.font='600 12.5px '+FONT;ctx.textAlign='center';ctx.textBaseline='bottom';ctx.fillText(o.xLabel||'',L+pw/2,H-4);
+  ctx.save();ctx.translate(15,T+ph/2);ctx.rotate(-Math.PI/2);ctx.textBaseline='middle';ctx.fillText(o.yLabel||'',0,0);ctx.restore();
+  ctx.save();ctx.beginPath();ctx.rect(L,T-3,pw+2,ph+6);ctx.clip();
+  (o.series||[]).forEach(s=>{const pts=s.pts||[];if(!pts.length)return;
+    if(s.fill&&pts.length>1){ctx.globalAlpha=.15;ctx.fillStyle=s.color;ctx.beginPath();ctx.moveTo(X(pts[0][0]),yz);pts.forEach(p=>ctx.lineTo(X(p[0]),Y(p[1])));ctx.lineTo(X(pts[pts.length-1][0]),yz);ctx.closePath();ctx.fill();ctx.globalAlpha=1;}
+    ctx.strokeStyle=s.color;ctx.lineWidth=s.width||3;ctx.setLineDash(s.dash||[]);ctx.lineJoin='round';ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(X(p[0]),Y(p[1])):ctx.moveTo(X(p[0]),Y(p[1])));ctx.stroke();ctx.setLineDash([]);});
+  (o.points||[]).forEach(p=>{ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(X(p.x),Y(p.y),6,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();});
+  (o.labels||[]).forEach(l=>{ctx.font='700 12.5px '+FONT;const tw=ctx.measureText(l.text).width;let lx=clamp(X(l.x)+8,L+4,L+pw-tw-6),ly=Y(l.y)-12;ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(lx-3,ly-11,tw+6,16);ctx.fillStyle=l.color;ctx.textAlign='left';ctx.textBaseline='alphabetic';ctx.fillText(l.text,lx,ly+1);});
+  if(o.markerX!=null){ctx.strokeStyle='rgba(15,26,46,.35)';ctx.setLineDash([4,4]);ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(X(o.markerX),T);ctx.lineTo(X(o.markerX),T+ph);ctx.stroke();ctx.setLineDash([]);}
+  ctx.restore();
+  let lx=L+8;ctx.font='600 12.5px '+FONT;ctx.textAlign='left';ctx.textBaseline='middle';
+  (o.series||[]).filter(s=>s.label).forEach(s=>{ctx.strokeStyle=s.color;ctx.lineWidth=3;ctx.setLineDash(s.dash||[]);ctx.beginPath();ctx.moveTo(lx,T-19);ctx.lineTo(lx+20,T-19);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#1e293b';ctx.fillText(s.label,lx+26,T-19);lx+=ctx.measureText(s.label).width+46;});
+  if(o.empty){ctx.fillStyle='#94a3b8';ctx.font='600 14px '+FONT;ctx.textAlign='center';ctx.fillText(o.empty,L+pw/2,T+ph/2);}
+  ctx.textAlign='left';ctx.textBaseline='alphabetic';
+}
+
+/* =========================================================
+   ENGINE: builds each topic panel from its definition
+   ========================================================= */
+const TOPICS=[];const BY={};
+function def(T){TOPICS.push(T);BY[T.id]=T;}
+const num=id=>parseFloat($(id).value);
+const str=id=>$(id).value;
+const setM=(id,t)=>{const e=$(id);if(e)e.textContent=t;};
+const setML=(id,t)=>{const e=$(id+'L');if(e)e.textContent=t;};
+const setW=(tid,html)=>{const e=$(tid+'Working');if(e)e.innerHTML=html;};
+function ctrlDef(id){for(const T of TOPICS){const c=T.controls.find(c=>c.id===id);if(c)return c;}return null;}
+function refreshOut(id){const c=ctrlDef(id),inp=$(id);if(!c||c.type==='select')return;const v=parseFloat(inp.value);$(id+'Out').textContent=fmt(v,c.dp)+(c.unit?' '+c.unit:'');inp.style.setProperty('--p',((v-c.min)/(c.max-c.min)*100)+'%');}
+function setRange(id,min,max,step,dp){const c=ctrlDef(id),inp=$(id);Object.assign(c,{min,max,step,dp});inp.min=min;inp.max=max;inp.step=step;refreshOut(id);}
+function setVal(id,v){$(id).value=v;refreshOut(id);}
+function predicting(tid){const p=BY[tid].pred;return p.locked!=null||!!p.pending;}
+function setChallenge(tid,html){const e=$(tid+'Challenge');if(e)e.innerHTML=html;}
+const LEG={force:['Force',C.force],fric:['Friction / resistance',C.fric],vel:['Velocity',C.vel],mom:['Momentum',C.mom],norm:['Weight / normal reaction',C.norm]};
+
+function panelHTML(T){
+  const ctrls=T.controls.map(c=>c.type==='select'
+    ?`<div class="ctrl" id="${c.id}Wrap"><label for="${c.id}">${c.label}</label><select id="${c.id}">${c.options.map(([v,t])=>`<option value="${v}"${v===c.value?' selected':''}>${t}</option>`).join('')}</select></div>`
+    :`<div class="ctrl" id="${c.id}Wrap"><div class="ctrl-top"><label for="${c.id}">${c.label}</label><output id="${c.id}Out"></output></div><input type="range" id="${c.id}" min="${c.min}" max="${c.max}" step="${c.step}" value="${c.value}"></div>`).join('');
+  const presets=T.presets?`<div class="preset"><label for="${T.id}Preset">Sport scenario</label><select id="${T.id}Preset"><option value="">Custom settings</option>${T.presets.map((p,i)=>`<option value="${i}">${p.label}</option>`).join('')}</select></div>`:'';
+  const P=T.predict;
+  const pin=P.type==='number'?`<input type="number" id="${T.id}PredIn" step="any" placeholder="${P.placeholder||''}"><span class="unit">${P.unit||''}</span>`
+    :`<select id="${T.id}PredIn"><option value="">Choose…</option>${P.options.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select>`;
+  const qs=T.questions.map((q,i)=>`<div class="q"><p class="q-text">${i+1}. ${q.q}</p><div class="q-row"><select id="${T.id}Q${i}"><option value="">Choose an answer…</option>${q.opts.map(([v,t])=>`<option value="${v}">${t}</option>`).join('')}</select><button class="btn" type="button" data-q="${i}">Check</button></div><div class="q-fb" id="${T.id}Q${i}Fb"></div><div class="why teacher-only"><b>Answer:</b> ${q.opts.find(o=>o[0]===q.a)[1]}. ${q.why}</div></div>`).join('');
+  const exam=T.exam.map(e=>`<div class="exam-item" data-course="${e.course}"><p class="exam-q"><span class="course-tag">${e.course==='both'?'VCE / IB':e.course.toUpperCase()}</span>${e.q}<span class="marks">${e.marks} mark${e.marks>1?'s':''}</span></p><textarea placeholder="Draft your answer here (not saved)"></textarea><div class="scheme teacher-only"><b>Marking guide</b><ol>${e.scheme.map(s=>`<li>${s}</li>`).join('')}</ol></div></div>`).join('');
+  return `
+  <div class="panel-head"><div class="head-text"><div class="eyebrow"><span class="chip">${T.icon} ${T.sport}</span>${T.course==='ib'?'<span class="chip ib">IB SEHS</span>':''}</div><h2>${T.title}</h2><p class="def">${T.def}</p></div><div class="formula">${T.formula}</div></div>
+  <div class="lab">
+    <div class="stage-col">
+      <div class="card stage"><div class="stage-top"><h3>${T.stageTitle}</h3><div class="legend">${T.legend.map(k=>`<span><i style="background:${LEG[k][1]}"></i>${LEG[k][0]}</span>`).join('')}</div></div>
+        <canvas id="${T.id}Canvas" aria-label="${T.stageTitle} animation"></canvas><p class="note">${T.note}</p>
+        <div class="metrics">${T.metrics.map(m=>`<div class="metric${m.hide?' hideable':''}"><span class="m-label" id="${m.id}L">${m.label}</span><span class="m-val" id="${m.id}">—</span></div>`).join('')}</div></div>
+      ${T.graph?`<div class="card graph"><div class="stage-top"><h3>${T.graph.title}</h3><span class="graph-note">${T.graph.note||''}</span></div><canvas id="${T.id}Graph" aria-label="${T.graph.title}"></canvas></div>`:''}
+    </div>
+    <aside class="card controls"><h3>Controls</h3>${presets}${ctrls}
+      <div class="predict"><div class="p-head">🔮 Predict first</div><p class="p-q" id="${T.id}PredQ"></p><div class="p-row">${pin}<button class="btn small" id="${T.id}PredLock" type="button">Lock in</button></div><div class="p-out" id="${T.id}PredOut"></div></div>
+      <div class="btn-row"><button class="btn primary" id="${T.id}Run" type="button">▶ ${T.runLabel||'Run'}</button><button class="btn ghost" id="${T.id}Reset" type="button">↺ Reset</button></div>
+      ${T.challenge?`<div class="challenge" id="${T.id}Challenge"></div>`:''}
+    </aside>
+  </div>
+  <div class="learn">
+    <div class="card quiz"><h3>Check your understanding</h3>${qs}</div>
+    <div class="side-learn">
+      <details class="card working" id="${T.id}WorkingBox"><summary>Show the working</summary><div class="work" id="${T.id}Working"></div></details>
+      <div class="card exam"><h3>Exam-style practice</h3>${exam}</div>
+    </div>
+  </div>`;}
+
+let progress=store.get('bmsProgress')||{};
+function markProgress(T){const n=(progress[T.id]||[]).length;$(T.id+'Nav').classList.toggle('done',n>=T.questions.length);}
+
+function afterChange(T){T.sim.stop();T.sim.reset(false);refreshVis(T);T.sim.update();updatePredQ(T);
+  if(T.pred.locked!=null){unlock(T);out(T,'Settings changed: lock in a new prediction.','info');}
+  T.pred.pending=null;T.sim.draw();}
+function refreshVis(T){T.controls.forEach(c=>{if(c.show)$(c.id+'Wrap').style.display=c.show()?'':'none';});}
+function updatePredQ(T){const q=T.predict.q;$(T.id+'PredQ').textContent=typeof q==='function'?q():q;}
+function out(T,txt,cls){const e=$(T.id+'PredOut');e.textContent=txt;e.className='p-out '+(cls||'');}
+function unlock(T){T.pred.locked=null;const inp=$(T.id+'PredIn'),b=$(T.id+'PredLock');inp.disabled=false;b.textContent='Lock in';b.classList.remove('locked');$(T.id).classList.remove('predicting');}
+function finish(tid){const T=BY[tid];const p=T.pred.pending;
+  if(p){const P=T.predict;
+    if(P.type==='number'){const g0=parseFloat(p.guess),a=p.ans,err=Math.abs(g0-a)/Math.max(Math.abs(a),1e-9);
+      out(T,(err<=0.1?'✓ ':'✗ ')+`You predicted ${fmt(g0,1)} ${P.unit}. Actual: ${fmt(a,1)} ${P.unit} (${Math.round(err*100)}% off)${err<=0.1?'. Excellent estimate!':'. Use the working to see why.'}`,err<=0.1?'ok':'bad');}
+    else{const lab=v=>(P.options.find(o=>o[0]===v)||[,v])[1];const ok=p.guess===p.ans;
+      out(T,ok?`✓ You predicted "${lab(p.guess)}". Correct!`:`✗ You predicted "${lab(p.guess)}". The result was "${lab(p.ans)}". Use the numbers below to explain why.`,ok?'ok':'bad');}
+    T.pred.pending=null;unlock(T);}
+  T.sim.update();T.sim.draw();}
+
+function bindTopic(T){
+  T.pred={locked:null,pending:null};
+  T.controls.forEach(c=>{const inp=$(c.id);const h=()=>{refreshOut(c.id);if(T.sim.onControl)T.sim.onControl(c.id,false);if(T.presets&&!T._applying)$(T.id+'Preset').value='';afterChange(T);};inp.addEventListener('input',h);if(c.type==='select')inp.addEventListener('change',h);});
+  if(T.presets)$(T.id+'Preset').addEventListener('change',e=>{const i=e.target.value;if(i==='')return;const p=T.presets[+i];T._applying=true;
+    Object.entries(p.set).forEach(([k,v])=>{$(k).value=v;refreshOut(k);if(T.sim.onControl)T.sim.onControl(k,true);});
+    if(T.sim.onPreset)T.sim.onPreset(p);T._applying=false;afterChange(T);});
+  $(T.id+'PredLock').addEventListener('click',()=>{const inp=$(T.id+'PredIn');
+    if(T.pred.locked!=null){unlock(T);out(T,'','');return;}
+    const v=inp.value.trim();if(!v||(T.predict.type==='number'&&!Number.isFinite(parseFloat(v)))){out(T,'Choose or type a prediction first.','bad');return;}
+    T.pred.locked=v;inp.disabled=true;const b=$(T.id+'PredLock');b.textContent='Change';b.classList.add('locked');$(T.id).classList.add('predicting');out(T,'Locked in. Now press Run.','info');T.sim.draw();});
+  $(T.id+'Run').addEventListener('click',()=>{T.sim.stop();T.sim.reset(false);T.sim.update();
+    if(T.pred.locked!=null)T.pred.pending={guess:T.pred.locked,ans:T.sim.predictAnswer()};
+    else out(T,'Tip: lock in a prediction before you run it. It makes the result stick.','info');
+    T.sim.run();});
+  $(T.id+'Reset').addEventListener('click',()=>{T.sim.stop();T.sim.reset(true);T.pred.pending=null;if(T.pred.locked==null)out(T,'','');T.sim.update();T.sim.draw();});
+  $(T.id).querySelectorAll('.q-row .btn').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.q,q=T.questions[i],v=$(T.id+'Q'+i).value,fb=$(T.id+'Q'+i+'Fb');
+    if(!v){fb.textContent='Choose an answer first.';fb.className='q-fb bad';return;}
+    if(v===q.a){fb.textContent='✓ Correct. '+q.why;fb.className='q-fb ok';const arr=progress[T.id]||[];if(!arr.includes(i))arr.push(i);progress[T.id]=arr;store.set('bmsProgress',progress);markProgress(T);}
+    else{fb.textContent='✗ Not quite. Hint: '+q.hint;fb.className='q-fb bad';}}));
+}
+
+let view=store.get('bmsView')||'vce',active=null;
+function visible(T){return T.course!=='ib'||view==='ib';}
+function activate(id){const T=BY[id];if(!T||!visible(T))return;active=id;store.set('bmsTopic',id);
+  TOPICS.forEach(t=>{$(t.id).classList.toggle('active',t.id===id);$(t.id+'Nav').classList.toggle('active',t.id===id);if(t.id!==id)t.sim.stop();});
+  T.sim.draw();}
+function setView(v){view=v;store.set('bmsView',v);document.body.dataset.view=v;$('vceBtn').classList.toggle('on',v==='vce');$('ibBtn').classList.toggle('on',v==='ib');
+  TOPICS.forEach(T=>{$(T.id+'WorkingBox').open=v==='ib';});
+  if(!active||!visible(BY[active]))activate(TOPICS.find(visible).id);}
+
+/* =========================================================
+   1. NEWTON'S FIRST LAW
+   ========================================================= */
+function simLaw1(){
+  const OBJ={soccer:{m:0.43,kind:'soccer',r:13},bowl:{m:1.5,kind:'#3d3a46',r:14},puck:{m:0.17,kind:'puck',r:14}};
+  const SURF={ice:{c:0.002,g:'ice',n:'Ice'},turf:{c:0.05,g:'turf',n:'Synthetic turf'},grass:{c:0.12,g:'grass',n:'Short dry grass'},wet:{c:0.30,g:'wet',n:'Long wet grass'}};
+  const LEN=32,OUT={rest:'Stays at rest',constant:'Constant velocity',speeds:'Speeding up',slows:'Slowing down'};
+  let ctx,gctx,d;const S={};const anim=animator(step);
+  function read(){const o=OBJ[str('l1Obj')],s=SURF[str('l1Surf')],P=num('l1Push'),v0=num('l1V0');return{o,s,P,v0,R:s.c*o.m*g};}
+  function net(v){return v>1e-6?d.P-d.R:(d.P>d.R?d.P-d.R:0);}
+  function resAct(v){return v>1e-6?d.R:Math.min(d.P,d.R);}
+  function cls(v){const a=net(v)/d.o.m;if(v<=1e-6&&a<=0)return'rest';if(Math.abs(a)<0.1)return'constant';return a>0?'speeds':'slows';}
+  function ended(x,v,t){return x>LEN+1||t>=8||(v<=1e-6&&d.P<=d.R&&(d.v0>0||t>1.5));}
+  function presim(){let x=0,v=d.v0,t=0,vm=v;while(t<8){v=Math.max(0,v+net(v)/d.o.m*0.01);x+=v*0.01;t+=0.01;vm=Math.max(vm,v);if(ended(x,v,t))break;}return{t,vm};}
+  function step(dt){S.v=Math.max(0,S.v+net(S.v)/d.o.m*dt);S.x+=S.v*dt;S.t+=dt;if(S.t-S.lp>=0.04){S.pts.push([S.t,S.v]);S.lp=S.t;}
+    const end=ended(S.x,S.v,S.t);if(end){S.pts.push([S.t,S.v]);S.done=true;}api.update();api.draw();if(end){finish('law1');return false;}}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    reset(){anim.stop();d=read();Object.assign(S,{x:0,v:d.v0,t:0,pts:[],lp:0,started:false,done:false});const p=presim();S.tMax=Math.max(1.5,p.t*1.05);S.vMax=Math.max(1,p.vm*1.2);},
+    update(){d=read();const v=S.started?S.v:d.v0,n=net(v),a=n/d.o.m;
+      const fd=x=>fmt(x,Math.abs(x)<0.1&&x!==0?3:2);setM('l1MRes',fd(resAct(v))+' N');setM('l1MNet',fd(n)+' N');setM('l1MAcc',fd(a)+' m/s²');setM('l1MVel',fmt(v,1)+' m/s');setM('l1MOut',S.done&&d.v0>0&&S.v<=1e-6?'Slowed to a stop':S.done&&S.x>LEN?OUT[cls(d.v0)]:OUT[cls(v)]);
+      let w=`Resistance R = c × m × g = ${d.s.c} × ${d.o.m} × 9.8 = <b>${fmt(d.R,3)} N</b><br>`;
+      if(d.v0<=1e-6&&d.P<=d.R)w+=`Ball at rest and push (${fmt(d.P,2)} N) ≤ R, so friction exactly matches the push.<br>ΣF = <b>0 N</b> → it stays at rest.`;
+      else{const n0=net(d.v0),a0=n0/d.o.m;w+=`ΣF = Push − R = ${fmt(d.P,2)} − ${fmt(d.R,3)} = <b>${fmt(n0,3)} N</b><br>a = ΣF ÷ m = ${fmt(n0,3)} ÷ ${d.o.m} = <b>${fmt(a0,2)} m/s²</b><br>→ ${OUT[cls(d.v0)].toLowerCase()}${Math.abs(a0)<0.1&&d.v0>0?' (forces balanced, or very nearly)':''}`;}
+      setW('law1',w);},
+    draw(){const W=ctx.W,H=ctx.H,gy=H-86;sky(ctx);ground(ctx,gy,d.s.g);const sx=(W-90)/LEN,x0=45;
+      ctx.font='600 12px '+FONT;ctx.textAlign='center';
+      for(let m=0;m<=LEN;m+=4){const X=x0+m*sx;ctx.fillStyle='rgba(255,255,255,.6)';ctx.fillRect(X-1,gy,2,10);ctx.fillStyle=d.s.g==='ice'?'#1e3a5f':'rgba(255,255,255,.85)';ctx.fillText(m+' m',X,gy+26);}
+      ctx.textAlign='left';
+      const X=x0+Math.min(S.x,LEN+1.5)*sx,r=d.o.r,Y=gy-(d.o.kind==='puck'?r*.4:r);
+      shadowEllipse(ctx,X,gy,r);ball(ctx,X,Y,r,d.o.kind);
+      const v=S.started?S.v:d.v0;
+      if(v>0.02)arrow(ctx,X,Y-r-34,X+v*7,Y-r-34,C.vel,'v = '+fmt(v,1)+' m/s');
+      const fs=55,Ra=resAct(v);
+      if(d.P>0.005)arrow(ctx,X+r+3,Y,X+r+3+Math.min(d.P*fs,190),Y,C.force,'Push '+fmt(d.P,2)+' N',{below:true});
+      if(Ra>0.001)arrow(ctx,X-r-3,gy-5,X-r-3-clamp(Ra*fs,10,190),gy-5,C.fric,'Resistance '+fmt(Ra,Ra<0.01?3:2)+' N',{lx:X-r-3-clamp(Ra*fs,10,190)/2,ly:gy+52});
+      hud(ctx,['Surface: '+d.s.n,'Time: '+fmt(S.t,1)+' s','Distance: '+fmt(Math.min(S.x,LEN),1)+' m']);
+      if(S.done)badge(ctx,S.x>LEN?'Still moving: it rolled off the pitch':S.x<0.01?'Stayed at rest':'Stopped after '+fmt(S.x,1)+' m',W/2,36,S.x>LEN?C.vel:C.fric);
+      plot(gctx,{xMax:S.tMax,yMax:S.vMax,xLabel:'Time (s)',yLabel:'Velocity (m/s)',series:[{pts:S.pts,color:GC.vel,label:'Velocity'}],markerX:S.started?S.t:null,empty:S.started?null:'Press Run to plot the velocity'});},
+    run(){d=read();S.started=true;S.pts=[[0,d.v0]];anim.start();},
+    predictAnswer(){d=read();return cls(d.v0);}
+  };return api;}
+
+def({id:'law1',name:"Newton's 1st Law",icon:'⚽',course:'both',sport:'Ball rolling on different surfaces',
+  title:"Newton's First Law: inertia",
+  def:'An object stays at rest, or keeps moving at a constant velocity, unless an unbalanced (net) external force acts on it.',
+  formula:'ΣF = 0 → velocity stays constant',stageTitle:'Ball rolling across a surface',legend:['force','fric','vel'],
+  note:'The push is a continuous forward force (like a player dribbling). Resistance comes from the surface and always opposes motion. Air resistance is ignored.',
+  controls:[
+    {type:'select',id:'l1Obj',label:'Object',value:'soccer',options:[['soccer','Soccer ball (0.43 kg)'],['bowl','Lawn bowl (1.5 kg)'],['puck','Ice-hockey puck (0.17 kg)']]},
+    {type:'select',id:'l1Surf',label:'Surface',value:'grass',options:[['ice','Ice'],['turf','Synthetic turf'],['grass','Short dry grass'],['wet','Long wet grass']]},
+    {type:'range',id:'l1V0',label:'Starting velocity',min:0,max:15,step:0.5,value:8,unit:'m/s',dp:1},
+    {type:'range',id:'l1Push',label:'Continuous forward push',min:0,max:3,step:0.01,value:0,unit:'N',dp:2}],
+  presets:[
+    {label:'Puck sliding on ice',set:{l1Obj:'puck',l1Surf:'ice',l1V0:15,l1Push:0}},
+    {label:'Soccer pass on short grass',set:{l1Obj:'soccer',l1Surf:'grass',l1V0:8,l1Push:0}},
+    {label:'Same pass on long wet grass',set:{l1Obj:'soccer',l1Surf:'wet',l1V0:8,l1Push:0}},
+    {label:'Dribbling at a steady speed (balanced)',set:{l1Obj:'soccer',l1Surf:'grass',l1V0:3,l1Push:0.51}},
+    {label:'Ball at rest, small push',set:{l1Obj:'soccer',l1Surf:'grass',l1V0:0,l1Push:0.3}}],
+  metrics:[{id:'l1MRes',label:'Resistance acting'},{id:'l1MNet',label:'Net force now',hide:1},{id:'l1MAcc',label:'Acceleration now',hide:1},{id:'l1MVel',label:'Velocity now'},{id:'l1MOut',label:'Motion',hide:1}],
+  graph:{title:'Velocity–time graph',note:'A flat line means constant velocity, so the forces are balanced'},
+  predict:{q:'Before you run it: what will the velocity of the object do?',options:[['rest','Stay at rest'],['constant','Stay constant'],['slows','Decrease (slow down)'],['speeds','Increase (speed up)']]},
+  questions:[
+    {q:'An ice-hockey puck slides across ice, where resistance is almost zero. What happens to its velocity?',opts:[['a','It gradually speeds up'],['b','It stays almost constant'],['c','It quickly drops to zero']],a:'b',hint:'With almost no unbalanced force, is there anything to change its motion?',why:'With (almost) no unbalanced force acting, the puck keeps moving at a constant velocity. That is inertia.'},
+    {q:'A player dribbles at a steady 3 m/s, so the push exactly equals the resistance. What is the net force on the ball?',opts:[['a','Equal to the push, forwards'],['b','Equal to the resistance, backwards'],['c','Zero']],a:'c',hint:'Two equal and opposite forces act on the same object.',why:'Push and resistance are equal and opposite, so ΣF = 0 and the velocity stays constant.'},
+    {q:'Why does a pass along long wet grass stop sooner than the same pass on synthetic turf?',opts:[['a','The ball has less inertia on grass'],['b','Wet grass applies a larger unbalanced resistive force'],['c','No force acts on the ball on synthetic turf']],a:'b',hint:'Compare the green resistance arrow on both surfaces.',why:'The larger resistive force from wet grass is an unbalanced backward force, so the ball decelerates faster and stops sooner.'}],
+  exam:[
+    {course:'vce',q:'<span class="cmd">Explain</span> why a soccer pass along long, wet grass slows and stops sooner than the same pass along synthetic turf. Refer to Newton\'s first law.',marks:3,scheme:['A ball will keep moving at a constant velocity unless acted on by an unbalanced (net) external force.','Long, wet grass applies a larger resistive (friction / rolling resistance) force opposing the motion.','This larger unbalanced backward force causes greater deceleration, so the ball stops in a shorter time/distance.']},
+    {course:'ib',q:'An ice-hockey puck slides across the ice at a constant 15 m/s. <span class="cmd">State</span> the net force acting on the puck and <span class="cmd">justify</span> your answer.',marks:2,scheme:['Net force = 0 N.','Constant velocity means no change in motion, so the forces are balanced (Newton\'s first law).']}],
+  sim:simLaw1()});
+
+/* =========================================================
+   2. NEWTON'S SECOND LAW
+   ========================================================= */
+function simLaw2(){
+  const OB={basketball:{m:0.62,k:'basketball',r:17,n:'Basketball'},netball:{m:0.42,k:'netball',r:16,n:'Netball'},volleyball:{m:0.27,k:'volleyball',r:16,n:'Volleyball'},medicine:{m:3,k:'medicine',r:20,n:'Medicine ball'},shot4:{m:4,k:'shot',r:12,n:'Shot put'},shot7:{m:7.26,k:'shot',r:13,n:'Shot put'}};
+  const PUSH=0.2,SLOW=0.15,LANE=12,TMAX=0.6;let ctx,gctx,d;const S={};const anim=animator(step);
+  function read(){const A=OB[str('l2ObjA')],B=OB[str('l2ObjB')],FA=num('l2FA'),FB=num('l2FB');return{A,B,FA,FB,aA:FA/A.m,aB:FB/B.m};}
+  function kin(a,t){const tp=Math.min(t,PUSH);return{v:a*tp,x:.5*a*tp*tp+(t>PUSH?a*PUSH*(t-PUSH):0)};}
+  function step(dt){S.t=Math.min(TMAX,S.t+dt*SLOW);S.pA.push([S.t,kin(d.aA,S.t).v]);S.pB.push([S.t,kin(d.aB,S.t).v]);const end=S.t>=TMAX;if(end)S.done=true;api.update();api.draw();if(end){finish('law2');return false;}}
+  function cmp(){const r=d.aA/Math.max(d.aB,1e-9);return Math.abs(r-1)<0.01?'same':(r>1?'A':'B');}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    reset(){anim.stop();d=read();Object.assign(S,{t:0,started:false,done:false,pA:[[0,0]],pB:[[0,0]]});},
+    update(){d=read();const vA=d.aA*PUSH,vB=d.aB*PUSH;
+      setM('l2MaA',fmt(d.aA,1)+' m/s²');setM('l2MaB',fmt(d.aB,1)+' m/s²');setM('l2MvA',fmt(vA,1)+' m/s');setM('l2MvB',fmt(vB,1)+' m/s');setM('l2MWin',{A:'A ('+d.A.n+')',B:'B ('+d.B.n+')',same:'Equal'}[cmp()]);
+      setW('law2',`A: a = F ÷ m = ${fmt(d.FA,0)} ÷ ${d.A.m} = <b>${fmt(d.aA,1)} m/s²</b><br>&nbsp;&nbsp; v = a × t = ${fmt(d.aA,1)} × ${PUSH.toFixed(2)} = <b>${fmt(vA,1)} m/s</b><br>B: a = F ÷ m = ${fmt(d.FB,0)} ÷ ${d.B.m} = <b>${fmt(d.aB,1)} m/s²</b><br>&nbsp;&nbsp; v = a × t = ${fmt(d.aB,1)} × ${PUSH.toFixed(2)} = <b>${fmt(vB,1)} m/s</b>`);},
+    draw(){const W=ctx.W,H=ctx.H;sky(ctx);const x0=96,sx=(W-140)/LANE,lanes=[{k:'A',o:d.A,F:d.FA,a:d.aA,fy:180},{k:'B',o:d.B,F:d.FB,a:d.aB,fy:340}];
+      const Fm=Math.max(d.FA,d.FB,1);
+      lanes.forEach(L=>{ctx.fillStyle='#c98b4f';ctx.fillRect(0,L.fy,W,10);ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(0,L.fy,W,2);
+        ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(x0-1,L.fy-60,2,60);
+        const k=kin(L.a,S.t),X=x0+Math.min(k.x,LANE+1)*sx,r=L.o.r,Y=L.fy-r;
+        ball(ctx,X,Y,r,L.o.k);
+        const pushing=!S.started||S.t<=PUSH;
+        if(pushing&&L.F>0){const len=L.F/Fm*150;arrow(ctx,X-r-6-len,Y,X-r-6,Y,C.force,'F = '+fmt(L.F,0)+' N',{lx:X-r-6-len/2,ly:Y-26});}
+        if(S.started&&k.v>0.01)arrow(ctx,X+r+6,Y,X+r+6+Math.min(k.v*6,170),Y,C.vel,'v = '+fmt(k.v,1)+' m/s',{lx:X+r+6+Math.min(k.v*6,170)/2,ly:Y-26});
+        tag(ctx,L.k+' · '+L.o.n+' ('+L.o.m+' kg)',14,L.fy-80,L.k==='A'?'#ffd166':'#7dd3fc','left');});
+      hud(ctx,['Force acts for 0.20 s, then is removed','Slow motion · t = '+fmt(S.t,2)+' s'],W-300,14);
+      const vmax=Math.max(d.aA,d.aB)*PUSH;
+      plot(gctx,{xMax:TMAX,yMax:Math.max(1,vmax*1.15),xLabel:'Time (s)',yLabel:'Velocity (m/s)',series:[{pts:S.pA,color:GC.amber,label:'A: '+d.A.n},{pts:S.pB,color:GC.vel,label:'B: '+d.B.n}],markerX:S.started?S.t:null,empty:S.started?null:'Press Run to plot velocity against time'});},
+    run(){d=read();S.started=true;anim.start();},
+    predictAnswer(){d=read();return cmp();}
+  };return api;}
+const OBJ2=[['basketball','Basketball (0.62 kg)'],['netball','Netball (0.42 kg)'],['volleyball','Volleyball (0.27 kg)'],['medicine','Medicine ball (3 kg)'],['shot4','Shot put, women (4 kg)'],['shot7','Shot put, men (7.26 kg)']];
+def({id:'law2',name:"Newton's 2nd Law",icon:'🏋️',course:'both',sport:'Basketball vs shot put',
+  title:"Newton's Second Law: acceleration",
+  def:'The acceleration of an object is proportional to the net force acting on it and inversely proportional to its mass, in the direction of the force.',
+  formula:'F = m × a → a = F ÷ m',stageTitle:'Same push time, different objects',legend:['force','vel'],
+  note:'Each object is pushed from rest for 0.20 s (a typical throwing push phase). After that no force acts, so it keeps its release velocity.',
+  controls:[
+    {type:'select',id:'l2ObjA',label:'Object A',value:'basketball',options:OBJ2},
+    {type:'range',id:'l2FA',label:'Force on A',min:0,max:500,step:5,value:40,unit:'N',dp:0},
+    {type:'select',id:'l2ObjB',label:'Object B',value:'shot4',options:OBJ2},
+    {type:'range',id:'l2FB',label:'Force on B',min:0,max:500,step:5,value:40,unit:'N',dp:0}],
+  presets:[
+    {label:'Same force (40 N): basketball vs 4 kg shot',set:{l2ObjA:'basketball',l2FA:40,l2ObjB:'shot4',l2FB:40}},
+    {label:'Same ball, double the force',set:{l2ObjA:'basketball',l2FA:20,l2ObjB:'basketball',l2FB:40}},
+    {label:'Realistic: chest pass vs men\'s shot put',set:{l2ObjA:'basketball',l2FA:30,l2ObjB:'shot7',l2FB:400}}],
+  metrics:[{id:'l2MaA',label:'Acceleration A',hide:1},{id:'l2MaB',label:'Acceleration B',hide:1},{id:'l2MvA',label:'Release speed A',hide:1},{id:'l2MvB',label:'Release speed B',hide:1},{id:'l2MWin',label:'Greater acceleration',hide:1}],
+  graph:{title:'Velocity–time graph',note:'The slope (gradient) of each line is the acceleration'},
+  predict:{q:'Which object will have the greater acceleration?',options:[['A','Object A'],['B','Object B'],['same','Same acceleration']]},
+  questions:[
+    {q:'The same force is applied to a basketball (0.62 kg) and a 4 kg shot put. Which accelerates more?',opts:[['a','The shot put'],['b','The basketball'],['c','They accelerate equally']],a:'b',hint:'a = F ÷ m. What happens when m is smaller?',why:'The same force on a smaller mass gives a greater acceleration (a = F ÷ m).'},
+    {q:'If the force on the shot put doubles but its mass stays the same, its acceleration…',opts:[['a','doubles'],['b','halves'],['c','stays the same']],a:'a',hint:'Acceleration is proportional to force.',why:'Acceleration is directly proportional to net force, so doubling F doubles a.'},
+    {q:'On the velocity–time graph, what shows the acceleration of each object?',opts:[['a','The area under the line'],['b','The height of the line'],['c','The slope (gradient) of the line']],a:'c',hint:'Acceleration is the rate of change of velocity.',why:'Acceleration = change in velocity ÷ time, which is the gradient of a velocity–time graph.'}],
+  exam:[
+    {course:'vce',q:'<span class="cmd">Explain</span>, using Newton\'s second law, why a shot putter must apply far more force than a basketballer performing a chest pass to achieve a similar release velocity.',marks:3,scheme:['Acceleration = force ÷ mass (a = F/m).','The shot (4–7.26 kg) has a much greater mass than a basketball (0.62 kg).','So a much larger force is needed to produce the same acceleration, and therefore a similar release velocity over a similar push time.']},
+    {course:'ib',q:'A force of 400 N is applied to a 7.26 kg shot for 0.20 s, starting from rest. <span class="cmd">Calculate</span> the acceleration of the shot and its velocity at release.',marks:3,scheme:['a = F ÷ m = 400 ÷ 7.26 = 55.1 m/s².','v = u + at = 0 + 55.1 × 0.20.','v = 11.0 m/s.']}],
+  sim:simLaw2()});
+
+/* =========================================================
+   3. NEWTON'S THIRD LAW
+   ========================================================= */
+function simLaw3(){
+  const MB=0.62,E=0.75,TC=0.010,MBOARD=300,TP=0.25,ME=5.97e24;let ctx,gctx,d;const S={};const anim=animator(step);
+  function read(){const sc=str('l3Scene');if(sc==='board'){const v=num('l3V'),F=MB*(v+E*v)/TC;return{sc,v,F,a1:F/MB,a2:F/MBOARD};}
+    const m=num('l3Mass'),k=num('l3K'),W=m*g,F=k*W,net=F-W,a=net/m,vto=net>0?a*TP:0;return{sc,m,k,W,F,net,a,vto,h:vto*vto/(2*g),ae:F/ME};}
+  function step(dt){S.tt+=dt;
+    if(d.sc==='board'){const bx0=150,front=702,r=20;
+      if(S.ph==='in'){S.x+=d.v*45*dt;if(S.x+r>=front){S.x=front-r;S.ph='contact';S.tt=0;}}
+      else if(S.ph==='contact'){if(S.tt>1.5){S.ph='out';S.tt=0;}}
+      else if(S.ph==='out'){S.x-=E*d.v*45*dt;if(S.x<=bx0){S.ph='done';S.done=true;}}}
+    else{if(S.ph==='push'){if(S.tt>=1.0){if(d.net>0){S.ph='flight';S.tt=0;}else{S.ph='done';S.done=true;}}}
+      else if(S.ph==='flight'){const t=S.tt*0.5;S.y=d.vto*t-.5*g*t*t;if(S.y<=0&&t>0.02){S.y=0;S.ph='done';S.done=true;}}}
+    api.update();api.draw();if(S.done){finish('law3');return false;}}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    reset(){anim.stop();d=read();Object.assign(S,{ph:'ready',x:150,y:0,tt:0,done:false});},
+    update(){d=read();
+      if(d.sc==='board'){setML('l3M1','Force ON ball (by board)');setML('l3M2','Force ON board (by ball)');setML('l3M3','Ball acceleration');setML('l3M4','Backboard acceleration');setML('l3M5','Contact time');
+        setM('l3M1',fmt(d.F,0)+' N');setM('l3M2',fmt(d.F,0)+' N');setM('l3M3',fmt(d.a1,0)+' m/s²');setM('l3M4',fmt(d.a2,1)+' m/s²');setM('l3M5','0.010 s');
+        setW('law3',`Change in velocity: Δv = ${fmt(d.v,1)} + ${fmt(E*d.v,1)} (rebound) = ${fmt(d.v*(1+E),1)} m/s<br>F = m × Δv ÷ t = ${MB} × ${fmt(d.v*(1+E),1)} ÷ ${TC} = <b>${fmt(d.F,0)} N</b> on EACH object<br>a(ball) = ${fmt(d.F,0)} ÷ ${MB} = <b>${fmt(d.a1,0)} m/s²</b><br>a(board + stand, ≈${MBOARD} kg) = ${fmt(d.F,0)} ÷ ${MBOARD} = <b>${fmt(d.a2,1)} m/s²</b>`);}
+      else{setML('l3M1','Force ON athlete (by ground)');setML('l3M2','Force ON ground (by athlete)');setML('l3M3','Athlete net acceleration');setML('l3M4','Earth acceleration');setML('l3M5','Jump height');
+        setM('l3M1',fmt(d.F,0)+' N');setM('l3M2',fmt(d.F,0)+' N');setM('l3M3',fmt(Math.max(0,d.a),1)+' m/s²');setM('l3M4',sci(d.ae)+' m/s²');setM('l3M5',d.net>0?fmt(d.h,2)+' m':'No take-off');
+        setW('law3',`Weight W = m × g = ${d.m} × 9.8 = <b>${fmt(d.W,0)} N</b><br>Ground reaction force = ${fmt(d.k,2)} × W = <b>${fmt(d.F,0)} N</b> (equal and opposite to the athlete's push on the ground)<br>ΣF on athlete = ${fmt(d.F,0)} − ${fmt(d.W,0)} = <b>${fmt(d.net,0)} N</b> → a = ${fmt(d.net,0)} ÷ ${d.m} = <b>${fmt(Math.max(0,d.a),1)} m/s²</b><br>`+(d.net>0?`Take-off v = a × ${TP} s = ${fmt(d.vto,2)} m/s → h = v² ÷ 2g = <b>${fmt(d.h,2)} m</b><br>`:'GRF ≤ weight, so no upward acceleration.<br>')+`a(Earth) = ${fmt(d.F,0)} ÷ 5.97 × 10²⁴ kg = <b>${sci(d.ae)} m/s²</b>`);}},
+    draw(){const W=ctx.W,H=ctx.H;sky(ctx);
+      if(d.sc==='board'){const gy=H-56;ground(ctx,gy,'court');const front=702,r=20,by=150;
+        ctx.fillStyle='#94a3b8';ctx.fillRect(770,60,14,gy-60);ctx.fillRect(716,92,60,10);
+        ctx.fillStyle='#f8fafc';ctx.fillRect(front,52,16,170);ctx.strokeStyle='#ef4444';ctx.lineWidth=3;ctx.strokeRect(front+1,110,14,60);
+        ball(ctx,S.x,by,r,'basketball');
+        if(S.ph==='contact'){const len=clamp(d.F*0.11,40,170);
+          arrow(ctx,front+8,86,front+8+len,86,C.force,'Force ON board BY ball: '+fmt(d.F,0)+' N',{lx:front-40,ly:58,align:'center'});
+          arrow(ctx,S.x,by,S.x-len,by,C.force,'Force ON ball BY board: '+fmt(d.F,0)+' N',{below:true});
+          badge(ctx,'CONTACT (real time: 0.010 s)',W/2-120,36,C.force);}
+        else if(S.ph==='in'||S.ph==='ready')arrow(ctx,S.x+r+6,by-36,S.x+r+6+d.v*9,by-36,C.vel,'v = '+fmt(d.v,1)+' m/s');
+        else if(S.ph==='out'||S.ph==='done')arrow(ctx,S.x-r-6,by-36,S.x-r-6-E*d.v*9,by-36,C.vel,'v = '+fmt(E*d.v,1)+' m/s');
+        if(S.ph==='ready')tag(ctx,'The force pair appears during contact',W/2-120,36,C.dim);}
+      else{const gy=H-120;ground(ctx,gy,'earth');ctx.font='800 15px '+FONT;ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillText('EARTH  (mass 5.97 × 10²⁴ kg)',24,H-20);
+        const x=450,lift=S.y*110,pushing=S.ph==='push'||S.ph==='ready';
+        const pose=S.ph==='ready'?'crouch':S.ph==='push'?(S.tt<0.5?'crouch':'stand'):S.ph==='flight'?'jump':'stand';
+        athlete(ctx,x,gy-lift,150,'#38bdf8',pose);
+        const len=clamp(d.F*0.05,20,108);
+        if(pushing){arrow(ctx,x+30,gy,x+30,gy-len,C.force,'ON athlete BY ground: '+fmt(d.F,0)+' N');arrow(ctx,x-30,gy+2,x-30,gy+2+len,C.force,'ON ground BY athlete: '+fmt(d.F,0)+' N',{left:true});}
+        arrow(ctx,x-4,gy-lift-80,x-4,gy-lift-80+clamp(d.W*0.05,20,108),C.norm,'Weight '+fmt(d.W,0)+' N',{left:true});
+        if(S.done&&d.net<=0)badge(ctx,'Ground reaction ≤ weight: no take-off',W/2,36,C.force);
+        else if(S.done)badge(ctx,'Jump height '+fmt(d.h,2)+' m',W/2,36,C.vel);}
+    },
+    run(){d=read();S.ph=d.sc==='board'?'in':'push';S.tt=0;anim.start();},
+    predictAnswer(){return 'equal';}
+  };return api;}
+def({id:'law3',name:"Newton's 3rd Law",icon:'🏀',course:'both',sport:'Basketball rebound and vertical jump',
+  title:"Newton's Third Law: action and reaction",
+  def:'When one object applies a force to another, the second object applies a force of equal size in the opposite direction back on the first.',
+  formula:'F(A on B) = − F(B on A)',stageTitle:'Force pairs',legend:['force','vel','norm'],
+  note:'Each force in a pair acts on a DIFFERENT object, so they never cancel. The same-sized force produces very different accelerations because the masses are different.',runLabel:'Run',
+  controls:[
+    {type:'select',id:'l3Scene',label:'Scenario',value:'board',options:[['board','Basketball hits the backboard'],['jump','Athlete jumps off the ground']]},
+    {type:'range',id:'l3V',label:'Ball speed into backboard',min:2,max:12,step:0.5,value:8,unit:'m/s',dp:1,show:()=>str('l3Scene')==='board'},
+    {type:'range',id:'l3Mass',label:'Athlete mass',min:45,max:110,step:1,value:75,unit:'kg',dp:0,show:()=>str('l3Scene')==='jump'},
+    {type:'range',id:'l3K',label:'Ground reaction force (× body weight)',min:0.5,max:2.6,step:0.05,value:2,unit:'× BW',dp:2,show:()=>str('l3Scene')==='jump'}],
+  presets:[
+    {label:'Hard rebound off the backboard',set:{l3Scene:'board',l3V:10}},
+    {label:'Volleyball block jump (2 × body weight)',set:{l3Scene:'jump',l3Mass:75,l3K:2}},
+    {label:'Push less than body weight',set:{l3Scene:'jump',l3Mass:75,l3K:0.9}}],
+  metrics:[{id:'l3M1',label:'Force 1',hide:1},{id:'l3M2',label:'Force 2',hide:1},{id:'l3M3',label:'Acceleration 1'},{id:'l3M4',label:'Acceleration 2'},{id:'l3M5',label:'Extra'}],
+  graph:null,
+  predict:{q:()=>str('l3Scene')==='board'?'How will the force ON the ball compare with the force ON the backboard?':'How will the force ON the athlete compare with the force ON the ground?',
+    options:[['bigger','Force on the ball / athlete is bigger'],['equal','They are equal in size'],['smaller','Force on the ball / athlete is smaller']]},
+  questions:[
+    {q:'When a jumper pushes down on the ground, the ground…',opts:[['a','pushes up on the jumper with a smaller force'],['b','pushes up on the jumper with an equal force'],['c','does not push back because it does not move']],a:'b',hint:'Newton\'s third law force pairs are always equal in size.',why:'The ground reaction force on the jumper is equal in size and opposite in direction to the jumper\'s push on the ground.'},
+    {q:'The jumper and the Earth feel forces of equal size. Why does only the jumper noticeably accelerate?',opts:[['a','The force on the Earth is smaller'],['b','The forces cancel out on the Earth'],['c','The Earth\'s mass is enormous, so a = F ÷ m is tiny']],a:'c',hint:'Use a = F ÷ m for each object.',why:'Same force, but the Earth\'s mass (≈6 × 10²⁴ kg) makes its acceleration far too small to notice.'},
+    {q:'Do action and reaction forces cancel each other out?',opts:[['a','Yes, they are equal and opposite'],['b','No, they act on different objects'],['c','Only when nothing is moving']],a:'b',hint:'Which object does each arrow act on?',why:'Forces only cancel if they act on the same object. An action–reaction pair always acts on two different objects.'}],
+  exam:[
+    {course:'vce',q:'A volleyball player performs a vertical block jump. <span class="cmd">Explain</span>, using Newton\'s third law, how the player is able to leave the ground.',marks:3,scheme:['The player applies a force down into the ground (action).','The ground applies an equal and opposite force up on the player (ground reaction force).','When the ground reaction force is greater than the player\'s weight there is a net upward force, so the player accelerates upward and leaves the ground.']},
+    {course:'ib',q:'<span class="cmd">Explain</span> why the action and reaction forces between a sprinter\'s foot and the starting block do not cancel each other out.',marks:2,scheme:['The forces act on different objects (one on the block, one on the sprinter).','Only forces acting on the same object combine to give a net force, so the sprinter experiences an unbalanced force and accelerates.']}],
+  sim:simLaw3()});
+
+/* =========================================================
+   4. MOMENTUM
+   ========================================================= */
+function simMom(){
+  const CAT={players:{m:[50,130,1,0],v:[0,11,0.1,1],def:[85,9,120,6],k:42},balls:{m:[0.05,1,0.01,3],v:[0,50,0.5,1],def:[0.16,40,0.057,55],k:9}};
+  let ctx,gctx,d;const S={};const anim=animator(step);
+  function read(){const cat=str('mCat');const mA=num('mMA'),vA=num('mVA'),mB=num('mMB'),vB=num('mVB');return{cat,mA,vA,mB,vB,pA:mA*vA,pB:mB*vB};}
+  function cmp(){const r=d.pA/Math.max(d.pB,1e-9);if(d.pA<1e-9&&d.pB<1e-9)return'same';return Math.abs(r-1)<0.005?'same':(r>1?'A':'B');}
+  function step(dt){S.t+=dt;const k=CAT[d.cat].k;S.xA=Math.min(470,S.xA+d.vA*k*dt);S.xB=Math.min(470,S.xB+d.vB*k*dt);S.ph+=dt*8;
+    const end=S.t>2.4||((S.xA>=470||d.vA===0)&&(S.xB>=470||d.vB===0)&&S.t>0.3);if(end)S.done=true;api.update();api.draw();if(end){finish('momentum');return false;}}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    onControl(id){if(id==='mCat'){const c=CAT[str('mCat')];setRange('mMA',...c.m);setRange('mMB',...c.m);setRange('mVA',...c.v);setRange('mVB',...c.v);setVal('mMA',c.def[0]);setVal('mVA',c.def[1]);setVal('mMB',c.def[2]);setVal('mVB',c.def[3]);}},
+    reset(){anim.stop();d=read();Object.assign(S,{t:0,xA:70,xB:70,ph:0,started:false,done:false});},
+    update(){d=read();const dp=d.cat==='players'?0:2;setM('mMpA',fmt(d.pA,dp)+' kg·m/s');setM('mMpB',fmt(d.pB,dp)+' kg·m/s');setM('mMWin',{A:'A',B:'B',same:'Equal'}[cmp()]);
+      setW('momentum',`p(A) = m × v = ${d.mA} × ${fmt(d.vA,1)} = <b>${fmt(d.pA,dp)} kg·m/s</b><br>p(B) = m × v = ${d.mB} × ${fmt(d.vB,1)} = <b>${fmt(d.pB,dp)} kg·m/s</b><br>Difference = <b>${fmt(Math.abs(d.pA-d.pB),dp)} kg·m/s</b>`);},
+    draw(){const W=ctx.W,H=ctx.H;sky(ctx);const pl=d.cat==='players';const lanes=[{k:'A',m:d.mA,v:d.vA,p:d.pA,x:S.xA,fy:180,c:C.teamA},{k:'B',m:d.mB,v:d.vB,p:d.pB,x:S.xB,fy:345,c:C.teamB}];
+      const pmax=Math.max(d.pA,d.pB,1e-9),hide=predicting('momentum')&&!S.done;
+      ctx.fillStyle='rgba(255,255,255,.06)';roundRect(ctx,600,16,288,H-32,12);ctx.fill();
+      ctx.font='800 14px '+FONT;ctx.fillStyle=C.mom;ctx.fillText('MOMENTUM (kg·m/s)',618,42);
+      lanes.forEach(L=>{ctx.fillStyle=pl?'#2c8b48':'#c98b4f';ctx.fillRect(0,L.fy,590,10);ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(0,L.fy,590,2);
+        if(pl){const h=96+(L.m-50)*0.45;athlete(ctx,L.x,L.fy,h,L.c,S.started&&L.v>0&&!S.done?'run':'stand',S.ph*L.v/8);}
+        else{const r=8+L.m*22;ball(ctx,L.x,L.fy-r,r,L.c);}
+        if(L.v>0)arrow(ctx,L.x+22,L.fy-(pl?150:60),L.x+22+L.v*(pl?11:2.6),L.fy-(pl?150:60),C.vel,'v = '+fmt(L.v,1)+' m/s');
+        tag(ctx,L.k+' · '+L.m+' kg',14,L.fy-24,L.c,'left');
+        const by=L.fy-62;ctx.fillStyle='rgba(255,255,255,.1)';roundRect(ctx,618,by,250,28,6);ctx.fill();
+        if(hide){ctx.fillStyle=C.dim;ctx.font='800 18px '+FONT;ctx.fillText('?',735,by+20);}
+        else{const len=Math.max(3,L.p/pmax*250);ctx.fillStyle=C.mom;roundRect(ctx,618,by,len,28,6);ctx.fill();tag(ctx,L.k+': '+fmt(L.p,pl?0:2)+' kg·m/s',628,by+46,C.mom,'left');}});},
+    run(){d=read();S.started=true;anim.start();},
+    predictAnswer(){d=read();return cmp();}
+  };return api;}
+def({id:'momentum',name:'Momentum',icon:'🏉',course:'both',sport:'Rugby players and fast balls',
+  title:'Momentum: mass in motion',
+  def:'Momentum is the quantity of motion an object has: the product of its mass and its velocity. It is a vector, so direction matters.',
+  formula:'p = m × v   (kg·m/s)',stageTitle:'Comparing momentum',legend:['vel','mom'],
+  note:'A heavy, slower player can have less, equal or more momentum than a light, faster one. It depends on the product m × v, not on either value alone.',
+  controls:[
+    {type:'select',id:'mCat',label:'Compare',value:'players',options:[['players','Players (50–130 kg)'],['balls','Balls (0.05–1 kg)']]},
+    {type:'range',id:'mMA',label:'Mass A',min:50,max:130,step:1,value:85,unit:'kg',dp:0},
+    {type:'range',id:'mVA',label:'Velocity A',min:0,max:11,step:0.1,value:9,unit:'m/s',dp:1},
+    {type:'range',id:'mMB',label:'Mass B',min:50,max:130,step:1,value:120,unit:'kg',dp:0},
+    {type:'range',id:'mVB',label:'Velocity B',min:0,max:11,step:0.1,value:6,unit:'m/s',dp:1}],
+  presets:[
+    {label:'Winger (85 kg, 9 m/s) vs prop (120 kg, 6 m/s)',set:{mCat:'players',mMA:85,mVA:9,mMB:120,mVB:6}},
+    {label:'Same player, half the speed',set:{mCat:'players',mMA:90,mVA:8,mMB:90,mVB:4}},
+    {label:'Cricket ball (40 m/s) vs tennis serve (55 m/s)',set:{mCat:'balls',mMA:0.16,mVA:40,mMB:0.057,mVB:55}},
+    {label:'Soccer kick vs netball pass',set:{mCat:'balls',mMA:0.43,mVA:28,mMB:0.42,mVB:9}}],
+  metrics:[{id:'mMpA',label:'Momentum A',hide:1},{id:'mMpB',label:'Momentum B',hide:1},{id:'mMWin',label:'Greater momentum',hide:1}],
+  graph:null,
+  predict:{q:'Which one has the greater momentum?',options:[['A','A'],['B','B'],['same','Equal momentum']]},
+  questions:[
+    {q:'A 120 kg prop runs at 6 m/s and an 85 kg winger runs at 9 m/s. Who has more momentum?',opts:[['a','The prop'],['b','The winger'],['c','They are equal']],a:'b',hint:'Multiply mass by velocity for each player.',why:'Prop: 120 × 6 = 720 kg·m/s. Winger: 85 × 9 = 765 kg·m/s.'},
+    {q:'If a player\'s velocity doubles (mass unchanged), their momentum…',opts:[['a','quadruples'],['b','doubles'],['c','does not change']],a:'b',hint:'p = m × v is a straight multiplication.',why:'Momentum is directly proportional to velocity, so doubling v doubles p.'},
+    {q:'Why can a heavy, slower player be harder to stop than a light, faster one?',opts:[['a','Heavier players always have more momentum'],['b','Speed does not affect momentum'],['c','They may have more momentum (m × v)']],a:'c',hint:'Momentum depends on both mass and velocity.',why:'If their m × v is larger, a larger impulse is needed to stop them.'}],
+  exam:[
+    {course:'vce',q:'A 120 kg prop runs at 6.0 m/s and an 85 kg winger runs at 9.0 m/s. <span class="cmd">Determine</span> which player has more momentum and <span class="cmd">explain</span> why that player may be harder to stop in a tackle.',marks:3,scheme:['Prop: p = 120 × 6.0 = 720 kg·m/s.','Winger: p = 85 × 9.0 = 765 kg·m/s, so the winger has more momentum.','More momentum means a greater impulse (force × time) is needed from the tackler to stop them.']},
+    {course:'ib',q:'<span class="cmd">Calculate</span> the momentum of a 0.16 kg cricket ball bowled at 38 m/s.',marks:1,scheme:['p = 0.16 × 38 = 6.1 kg·m/s (unit required).']}],
+  sim:simMom()});
+
+/* =========================================================
+   5. IMPULSE  (model tab: force–time graph)
+   ========================================================= */
+function simImp(){
+  const BALL={soccer:{m:0.43,k:'soccer',r:15,n:'Soccer ball'},afl:{m:0.45,k:'afl',r:14,n:'AFL football'},cricket:{m:0.16,k:'cricket',r:10,n:'Cricket ball'},tennis:{m:0.057,k:'tennis',r:9,n:'Tennis ball'}};
+  let ctx,gctx,d;const S={};const anim=animator(step);
+  function read(){const mode=str('iMode'),b=BALL[str('iBall')];
+    if(mode==='strike'){const FA=num('iFA'),TA=num('iTA'),FB=num('iFB'),TB=num('iTB'),JA=FA*TA/1000,JB=FB*TB/1000;return{mode,b,FA,TA,FB,TB,JA,JB,vA:JA/b.m,vB:JB/b.m};}
+    const v=num('iVin'),TA=num('iCA'),TB=num('iCB'),J=b.m*v;return{mode,b,v,TA,TB,J,JA:J,JB:J,FA:J/(TA/1000),FB:J/(TB/1000)};}
+  function cmpS(){if(d.mode==='strike'){const r=d.vA/Math.max(d.vB,1e-9);return Math.abs(r-1)<0.01?'same':r>1?'A':'B';}const r=d.FA/d.FB;return Math.abs(r-1)<0.01?'same':r>1?'A':'B';}
+  function lane(k){return{ph:'approach',x:k==='A'?40:40,bx:180,tt:0,trail:[],give:0};}
+  function step(dt){S.t+=dt;['A','B'].forEach(k=>{const L=S[k],Tms=d['T'+k];L.tt+=dt;
+      if(d.mode==='strike'){const r=d.b.r,v=d['v'+k];
+        if(L.ph==='approach'){L.x+=320*dt;if(L.x>=L.bx-r){L.x=L.bx-r;L.ph='contact';L.tt=0;}}
+        else if(L.ph==='contact'){if(L.tt>=Math.max(0.15,Tms*0.05)){L.ph='fly';L.tt=0;}}
+        else if(L.ph==='fly'){L.bx+=v*14*dt;L.x=Math.min(L.x+60*dt,250);if(!L.trail.length||L.bx-L.trail[L.trail.length-1]>=70){L.trail.push(L.bx);if(L.trail.length>9)L.trail.shift();}if(L.bx>ctx.W+40||L.tt>3)L.ph='done';}}
+      else{const hx=640,r=d.b.r;
+        if(L.ph==='approach'){L.bx+=d.v*12*dt;if(L.bx>=hx-r){L.bx=hx-r;L.ph='contact';L.tt=0;}}
+        else if(L.ph==='contact'){const dur=Math.max(0.15,Tms*0.012),u=Math.min(1,L.tt/dur);const dpx=clamp(d.v*Tms/1000/2*140,6,220);L.give=dpx*(1-(1-u)*(1-u));if(u>=1){L.ph='done';}}}});
+    const end=S.A.ph==='done'&&S.B.ph==='done';if(end)S.done=true;api.update();api.draw();if(end){finish('impulse');return false;}}
+  function curve(F,T){const pk=Math.PI/2*F,pts=[];for(let i=0;i<=60;i++)pts.push([T*i/60,pk*Math.sin(Math.PI*i/60)]);return pts;}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    reset(){anim.stop();d=read();Object.assign(S,{t:0,A:lane('A'),B:lane('B'),started:false,done:false});if(d.mode==='catch'){S.A.bx=S.B.bx=40;}},
+    update(){d=read();const m=d.b.m;
+      if(d.mode==='strike'){setML('iM1','Impulse A');setML('iM2','Impulse B');setML('iM3','Exit velocity A');setML('iM4','Exit velocity B');
+        setM('iM1',fmt(d.JA,2)+' N·s');setM('iM2',fmt(d.JB,2)+' N·s');setM('iM3',fmt(d.vA,1)+' m/s');setM('iM4',fmt(d.vB,1)+' m/s');
+        setW('impulse',`A: Impulse = F × t = ${fmt(d.FA,0)} × ${fmt(d.TA/1000,4)} = <b>${fmt(d.JA,2)} N·s</b><br>&nbsp;&nbsp; Δv = Impulse ÷ m = ${fmt(d.JA,2)} ÷ ${m} = <b>${fmt(d.vA,1)} m/s</b><br>B: Impulse = F × t = ${fmt(d.FB,0)} × ${fmt(d.TB/1000,4)} = <b>${fmt(d.JB,2)} N·s</b><br>&nbsp;&nbsp; Δv = Impulse ÷ m = ${fmt(d.JB,2)} ÷ ${m} = <b>${fmt(d.vB,1)} m/s</b>`);}
+      else{setML('iM1','Impulse to stop the ball');setML('iM2','Avg force: catch A');setML('iM3','Avg force: catch B');setML('iM4','Force ratio A : B');
+        setM('iM1',fmt(d.J,2)+' N·s');setM('iM2',fmt(d.FA,0)+' N');setM('iM3',fmt(d.FB,0)+' N');setM('iM4',fmt(d.FA/d.FB,1)+' : 1');
+        setW('impulse',`Impulse needed = Δp = m × v = ${m} × ${fmt(d.v,1)} = <b>${fmt(d.J,2)} N·s</b> (same for both catches)<br>Catch A: F = Impulse ÷ t = ${fmt(d.J,2)} ÷ ${fmt(d.TA/1000,3)} = <b>${fmt(d.FA,0)} N</b><br>Catch B: F = Impulse ÷ t = ${fmt(d.J,2)} ÷ ${fmt(d.TB/1000,3)} = <b>${fmt(d.FB,0)} N</b>`);}},
+    draw(){const W=ctx.W,H=ctx.H;sky(ctx);const Fm=Math.max(d.FA,d.FB,1);
+      ['A','B'].forEach((k,i)=>{const L=S[k],fy=i?345:180,r=d.b.r,y=fy-r-2,col=k==='A'?'#ffd166':'#7dd3fc';
+        ctx.fillStyle='#2c8b48';ctx.fillRect(0,fy,W,10);ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillRect(0,fy,W,2);
+        tag(ctx,k+(d.mode==='strike'?`: ${fmt(d['F'+k],0)} N for ${fmt(d['T'+k],1)} ms`:`: hands give for ${fmt(d['T'+k],0)} ms`),14,fy-120,col,'left');
+        if(d.mode==='strike'){
+          ctx.globalAlpha=.2;L.trail.forEach(tx=>ball(ctx,tx,y,r,d.b.k));ctx.globalAlpha=1;
+          boot(ctx,L.x,fy-8);ball(ctx,L.bx,y,r,d.b.k);
+          if(L.ph==='contact'||!S.started){const len=d['F'+k]/Fm*150;arrow(ctx,L.bx,y-r-18,L.bx+len,y-r-18,C.force,'F = '+fmt(d['F'+k],0)+' N',{lx:L.bx+len/2,ly:y-r-40});}
+          if(L.ph==='fly'||(L.ph==='done'&&S.started))arrow(ctx,Math.min(L.bx,W-180)+r+6,y,Math.min(L.bx,W-180)+r+6+Math.min(d['v'+k]*4,150),y,C.vel,'v = '+fmt(d['v'+k],1)+' m/s',{lx:Math.min(L.bx,W-180)+r+80,ly:y-r-22});}
+        else{const hx=640+L.give;hands(ctx,hx,y);ball(ctx,L.bx+L.give,y,r,d.b.k);
+          if(L.ph==='contact'||L.ph==='done'&&S.started){const len=d['F'+k]/Fm*150;arrow(ctx,hx+4,y-34,hx+4+len,y-34,C.force,'Avg force on hands '+fmt(d['F'+k],0)+' N',{lx:hx-40,ly:y-58,align:'center'});}
+          if(L.ph==='approach')arrow(ctx,L.bx+r+6,y,L.bx+r+6+d.v*3,y,C.vel,'v = '+fmt(d.v,1)+' m/s',{below:true});
+          ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(640,fy-6,2,-50);}});
+      hud(ctx,[d.mode==='strike'?'Contact slowed right down: a real kick lasts ≈ 0.01 s':'Catch slowed down so you can see the "give"'],W-420,14);
+      const hide=predicting('impulse')&&!S.done,pk=Math.PI/2*Fm;
+      plot(gctx,{xMax:Math.max(d.TA,d.TB)*1.15,yMax:pk*1.15,xLabel:'Time (ms)',yLabel:'Force (N)',empty:hide?'The graph appears after you run it':null,
+        series:hide?[]:[{pts:curve(d.FA,d.TA),color:GC.amber,fill:true,label:'A: impulse '+fmt(d.JA,2)+' N·s'},{pts:curve(d.FB,d.TB),color:GC.vel,fill:true,label:'B: impulse '+fmt(d.JB,2)+' N·s'},
+          {pts:[[0,d.FA],[d.TA,d.FA]],color:GC.amber,dash:[6,5],width:2},{pts:[[0,d.FB],[d.TB,d.FB]],color:GC.vel,dash:[6,5],width:2}]});},
+    run(){d=read();S.started=true;anim.start();},
+    predictAnswer(){d=read();return cmpS();}
+  };return api;}
+def({id:'impulse',name:'Impulse',icon:'🦶',course:'both',sport:'Kicking, and catching with "soft hands"',
+  title:'Impulse: force × time',
+  def:'Impulse is the average force applied multiplied by the time it is applied for. It equals the change in momentum of the object.',
+  formula:'Impulse = F × t = Δp = m × Δv',stageTitle:'Applying and absorbing impulse',legend:['force','vel'],
+  note:'Model: in a strike the ball starts at rest; in a catch the ball is brought to rest. The dashed line on the graph is the average force; the shaded area is the impulse.',runLabel:'Run',
+  controls:[
+    {type:'select',id:'iMode',label:'Situation',value:'strike',options:[['strike','Strike: apply an impulse'],['catch','Catch: absorb an impulse']]},
+    {type:'select',id:'iBall',label:'Ball',value:'soccer',options:[['soccer','Soccer ball (0.43 kg)'],['afl','AFL football (0.45 kg)'],['cricket','Cricket ball (0.16 kg)'],['tennis','Tennis ball (0.057 kg)']]},
+    {type:'range',id:'iFA',label:'Average force A',min:100,max:3000,step:10,value:1200,unit:'N',dp:0,show:()=>str('iMode')==='strike'},
+    {type:'range',id:'iTA',label:'Contact time A',min:2,max:30,step:0.5,value:10,unit:'ms',dp:1,show:()=>str('iMode')==='strike'},
+    {type:'range',id:'iFB',label:'Average force B',min:100,max:3000,step:10,value:1200,unit:'N',dp:0,show:()=>str('iMode')==='strike'},
+    {type:'range',id:'iTB',label:'Contact time B',min:2,max:30,step:0.5,value:5,unit:'ms',dp:1,show:()=>str('iMode')==='strike'},
+    {type:'range',id:'iVin',label:'Incoming ball speed',min:5,max:40,step:0.5,value:30,unit:'m/s',dp:1,show:()=>str('iMode')==='catch'},
+    {type:'range',id:'iCA',label:'Catch time A (stiff hands)',min:5,max:150,step:1,value:15,unit:'ms',dp:0,show:()=>str('iMode')==='catch'},
+    {type:'range',id:'iCB',label:'Catch time B (soft hands)',min:5,max:150,step:1,value:120,unit:'ms',dp:0,show:()=>str('iMode')==='catch'}],
+  presets:[
+    {label:'Instep drive vs short jab (soccer)',set:{iMode:'strike',iBall:'soccer',iFA:1200,iTA:10,iFB:1200,iTB:5}},
+    {label:'Same impulse, two different ways',set:{iMode:'strike',iBall:'soccer',iFA:2000,iTA:6,iFB:600,iTB:20}},
+    {label:'Wicketkeeper: stiff vs soft hands',set:{iMode:'catch',iBall:'cricket',iVin:30,iCA:15,iCB:120}},
+    {label:'Catching a fast tennis ball',set:{iMode:'catch',iBall:'tennis',iVin:40,iCA:10,iCB:60}}],
+  metrics:[{id:'iM1',label:'Impulse A',hide:1},{id:'iM2',label:'Impulse B',hide:1},{id:'iM3',label:'Exit velocity A',hide:1},{id:'iM4',label:'Exit velocity B',hide:1}],
+  graph:{title:'Force–time graph',note:'Area under the curve = impulse'},
+  predict:{q:()=>str('iMode')==='strike'?'Which ball will leave the boot faster?':'Which catch puts the larger average force on the hands?',options:[['A','A'],['B','B'],['same','The same']]},
+  questions:[
+    {q:'Impulse can be increased by increasing…',opts:[['a','force only'],['b','contact time only'],['c','force, contact time, or both']],a:'c',hint:'Impulse = F × t.',why:'Impulse = F × t, so increasing either the force or the time it acts (or both) increases impulse.'},
+    {q:'On a force–time graph, impulse is shown by…',opts:[['a','the peak of the curve'],['b','the area under the curve'],['c','the slope of the curve']],a:'b',hint:'Force × time is an area.',why:'Force × time is the area under the force–time curve. Two very different shapes can have the same area.'},
+    {q:'A wicketkeeper "gives" with the ball when catching. This…',opts:[['a','reduces the impulse needed to stop the ball'],['b','increases the time, so the average force is smaller'],['c','increases the force so the ball stops faster']],a:'b',hint:'The ball\'s change in momentum is fixed. What does "giving" change?',why:'The impulse needed is fixed by the ball\'s momentum. A longer time means a smaller average force (F = Impulse ÷ t).'}],
+  exam:[
+    {course:'vce',q:'<span class="cmd">Explain</span> how a wicketkeeper "giving" with the ball when catching reduces the force on their hands. Refer to impulse in your answer.',marks:3,scheme:['The impulse needed to stop the ball is fixed: it equals the ball\'s change in momentum.','Moving the hands back with the ball increases the time over which the force is applied.','Since impulse = F × t, a longer time means a smaller average force on the hands, reducing pain/injury risk and the chance of the ball rebounding out.']},
+    {course:'ib',q:'A 0.43 kg soccer ball is kicked from rest and leaves the boot at 26 m/s. The contact time is 0.010 s. <span class="cmd">Calculate</span> the impulse and the average force applied.',marks:3,scheme:['Impulse = Δp = 0.43 × 26 = 11.2 N·s.','F = Impulse ÷ t = 11.2 ÷ 0.010.','F ≈ 1.1 × 10³ N (1118 N).']}],
+  sim:simImp()});
+
+/* =========================================================
+   6. CONSERVATION OF MOMENTUM
+   ========================================================= */
+function simCons(){
+  const E=0.4,GAP=0.9,LEN=20,TI=0.12,POST=1.6;let ctx,gctx,d;const S={};const anim=animator(step);
+  function read(){const type=str('cType'),mA=num('cMA'),vA=num('cVA'),mB=num('cMB'),vB=num('cVB'),u1=vA,u2=-vB,P=mA*u1+mB*u2;let a1,a2;
+    if(type==='stick'){a1=a2=P/(mA+mB);}else{a1=(P-mB*E*(u1-u2))/(mA+mB);a2=(P+mA*E*(u1-u2))/(mA+mB);}
+    return{type,mA,mB,u1,u2,P,a1,a2,pA0:mA*u1,pB0:mB*u2};}
+  function dirA(){return d.a1>0.05?'right':d.a1<-0.05?'left':'stop';}
+  function step(dt){
+    if(S.ph==='pre'){S.t+=dt;S.xA+=d.u1*dt;S.xB+=d.u2*dt;S.va=d.u1;S.vb=d.u2;
+      if(S.xB-S.xA<=GAP){S.xB=S.xA+GAP;S.ph='impact';S.ti=0;S.real=0;}
+      else if(S.t>2.5){S.ph='done';S.done=true;}}
+    else if(S.ph==='impact'){S.real+=dt;const h=dt*0.24;S.ti+=h;S.t+=h;const u=Math.min(1,S.ti/TI);S.va=d.u1+(d.a1-d.u1)*u;S.vb=d.u2+(d.a2-d.u2)*u;S.xA+=S.va*h;S.xB=Math.max(S.xA+GAP,S.xB+S.vb*h);
+      if(u>=1){S.ph='post';S.collided=true;S.tp=0;}}
+    else if(S.ph==='post'){S.t+=dt;S.tp+=dt;S.xA=clamp(S.xA+d.a1*dt,0.5,LEN-0.5);S.xB=clamp(S.xB+d.a2*dt,S.xA+GAP,LEN);if(d.type==='stick')S.xB=S.xA+GAP;if(S.tp>=POST){S.ph='done';S.done=true;}}
+    S.pts.push([S.t,d.mA*S.va,d.mB*S.vb]);
+    api.update();api.draw();if(S.done){finish('conservation');return false;}}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    reset(){anim.stop();d=read();const cl=d.u1-d.u2;S.tEnd=cl>0?(LEN*0.6-GAP)/cl+TI+POST:2.5;Object.assign(S,{t:0,xA:4,xB:16,va:d.u1,vb:d.u2,ph:'ready',collided:false,started:false,done:false,pts:[]});},
+    update(){d=read();setM('cM1',fmt(d.pA0,0)+' kg·m/s');setM('cM2',fmt(d.pB0,0)+' kg·m/s');setM('cM3',fmt(d.P,0)+' kg·m/s');setM('cM4',fmt(d.mA*d.a1+d.mB*d.a2,0)+' kg·m/s');
+      setM('cM5',d.type==='stick'?fmt(d.a1,2)+' m/s (together)':'A '+fmt(d.a1,2)+' · B '+fmt(d.a2,2)+' m/s');
+      let w=`Right = positive, left = negative<br>p before = m₁u₁ + m₂u₂ = ${d.mA} × ${fmt(d.u1,1)} + ${d.mB} × (${fmt(d.u2,1)})<br>&nbsp;&nbsp; = ${fmt(d.pA0,0)} + (${fmt(d.pB0,0)}) = <b>${fmt(d.P,0)} kg·m/s</b><br>`;
+      w+=d.type==='stick'?`They move together: v = p ÷ (m₁ + m₂) = ${fmt(d.P,0)} ÷ ${d.mA+d.mB} = <b>${fmt(d.a1,2)} m/s</b>`:`Players bounce apart (e = ${E}): v₁ = <b>${fmt(d.a1,2)} m/s</b>, v₂ = <b>${fmt(d.a2,2)} m/s</b><br>Check: ${d.mA} × ${fmt(d.a1,2)} + ${d.mB} × ${fmt(d.a2,2)} = <b>${fmt(d.mA*d.a1+d.mB*d.a2,0)} kg·m/s</b>`;
+      setW('conservation',w);},
+    draw(){const W=ctx.W,H=ctx.H,gy=H-58;sky(ctx);ground(ctx,gy,'grass');const sx=(W-80)/LEN,x0=40;
+      for(let m=0;m<=LEN;m+=5){ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(x0+m*sx-1,gy,2,H-gy);}
+      const stuck=d.type==='stick'&&(S.ph==='post'||S.ph==='done'&&S.collided),hit=S.ph==='impact'||stuck;
+      const XA=x0+S.xA*sx,XB=x0+S.xB*sx;
+      athlete(ctx,XA,gy,140,C.teamA,hit?'tackle':(S.started&&Math.abs(S.va)>0.05&&!S.collided?'run':'stand'),S.t*Math.abs(d.u1)*1.6,1);
+      athlete(ctx,XB,gy,140,C.teamB,hit?'tackle':(S.started&&Math.abs(S.vb)>0.05&&!S.collided?'run':'stand'),S.t*Math.abs(d.u2)*1.6,-1);
+      const vy=gy-172;
+      if(stuck){if(Math.abs(S.va)>0.02){const mx=(XA+XB)/2;arrow(ctx,mx,vy,mx+S.va*16,vy,C.vel,fmt(S.va,2)+' m/s');}}
+      else{if(Math.abs(S.va)>0.02)arrow(ctx,XA,vy,XA+S.va*16,vy,C.vel,fmt(Math.abs(S.va),1)+' m/s');if(Math.abs(S.vb)>0.02)arrow(ctx,XB,vy-34,XB+S.vb*16,vy-34,C.vel,fmt(Math.abs(S.vb),1)+' m/s');}
+      const close=XB-XA<130;tag(ctx,'A · '+d.mA+' kg',close?XA-50:XA,gy+22,C.teamA);tag(ctx,'B · '+d.mB+' kg',close?XB+50:XB,gy+22,C.teamB);
+      if(S.ph==='impact')badge(ctx,'IMPACT',W/2-160,36,C.force);
+      // before / after momentum chart
+      const bx=W-330,by=12,bw=316,cx=bx+bw/2+20,pm=Math.max(Math.abs(d.pA0),Math.abs(d.pB0),1),sc=110/pm;
+      ctx.fillStyle='rgba(5,12,28,.65)';roundRect(ctx,bx,by,bw,112,10);ctx.fill();
+      ctx.font='800 12px '+FONT;ctx.fillStyle=C.mom;ctx.fillText('MOMENTUM (kg·m/s)',bx+10,by+18);
+      ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(cx,by+26,1,80);
+      const row=(lab,y,pa,pb,show)=>{ctx.fillStyle=C.dim;ctx.font='700 12px '+FONT;ctx.fillText(lab,bx+10,y+8);
+        if(!show){ctx.fillStyle=C.dim;ctx.font='800 16px '+FONT;ctx.fillText('?',cx-4,y+10);return;}
+        ctx.fillStyle=C.teamA;ctx.fillRect(Math.min(cx,cx+pa*sc),y-6,Math.abs(pa*sc),8);ctx.fillStyle=C.teamB;ctx.fillRect(Math.min(cx,cx+pb*sc),y+4,Math.abs(pb*sc),8);
+        const tx=cx+(pa+pb)*sc;ctx.fillStyle=C.mom;ctx.beginPath();ctx.moveTo(tx,y-9);ctx.lineTo(tx+6,y+3);ctx.lineTo(tx,y+15);ctx.lineTo(tx-6,y+3);ctx.closePath();ctx.fill();
+        ctx.fillStyle=C.text;ctx.font='700 12px '+FONT;ctx.textAlign='right';ctx.fillText('Total '+fmt(pa+pb,0),bx+bw-8,y+8);ctx.textAlign='left';};
+      row('Before',by+50,d.pA0,d.pB0,true);row('After',by+90,d.mA*d.a1,d.mB*d.a2,S.collided||!predicting('conservation'));
+      const pts=S.pts;plot(gctx,{xMax:S.tEnd,yMin:-pm*1.25,yMax:pm*1.25,xLabel:'Time (s)',yLabel:'Momentum (kg·m/s)',empty:S.started?null:'Press Run to plot momentum against time',
+        series:[{pts:pts.map(p=>[p[0],p[1]]),color:GC.gold,label:'Player A'},{pts:pts.map(p=>[p[0],p[2]]),color:GC.teal,label:'Player B'},{pts:pts.map(p=>[p[0],p[1]+p[2]]),color:GC.mom,width:4,label:'Total'}],markerX:S.started?S.t:null});},
+    run(){d=read();S.ph='pre';S.started=true;anim.start();},
+    predictAnswer(){d=read();return dirA();}
+  };return api;}
+def({id:'conservation',name:'Conservation of Momentum',icon:'💥',course:'both',sport:'Rugby tackles',
+  title:'Conservation of momentum',
+  def:'In a collision, the total momentum of the system before equals the total momentum after, provided no external force acts.',
+  formula:'m₁u₁ + m₂u₂ = m₁v₁ + m₂v₂',stageTitle:'Head-on collision',legend:['vel','mom'],
+  note:'Direction matters: right is positive and left is negative. The purple total line on the graph stays flat through the collision. That is conservation. (Ground friction is ignored during the brief impact.)',
+  controls:[
+    {type:'select',id:'cType',label:'Collision type',value:'stick',options:[['stick','Tackle: players hold on together'],['bounce','Players bounce apart']]},
+    {type:'range',id:'cMA',label:'Player A mass',min:60,max:130,step:1,value:95,unit:'kg',dp:0},
+    {type:'range',id:'cVA',label:'Player A speed (to the right)',min:0,max:10,step:0.1,value:7,unit:'m/s',dp:1},
+    {type:'range',id:'cMB',label:'Player B mass',min:60,max:130,step:1,value:110,unit:'kg',dp:0},
+    {type:'range',id:'cVB',label:'Player B speed (to the left)',min:0,max:10,step:0.1,value:5,unit:'m/s',dp:1}],
+  presets:[
+    {label:'Head-on tackle: 95 kg at 7 m/s vs 110 kg at 5 m/s',set:{cType:'stick',cMA:95,cVA:7,cMB:110,cVB:5}},
+    {label:'Equal and opposite momentum',set:{cType:'stick',cMA:100,cVA:6,cMB:120,cVB:5}},
+    {label:'Tackling a stationary player',set:{cType:'stick',cMA:90,cVA:8,cMB:100,cVB:0}},
+    {label:'Players bounce apart',set:{cType:'bounce',cMA:95,cVA:7,cMB:110,cVB:5}}],
+  metrics:[{id:'cM1',label:'A momentum before'},{id:'cM2',label:'B momentum before'},{id:'cM3',label:'Total before'},{id:'cM4',label:'Total after',hide:1},{id:'cM5',label:'Velocity after',hide:1}],
+  graph:{title:'Momentum–time graph',note:'Individual momenta change; the total does not'},
+  predict:{q:'Which way will player A be moving just after the collision?',options:[['right','To the right (A\'s original direction)'],['left','To the left (B\'s direction)'],['stop','Stopped']]},
+  questions:[
+    {q:'If no external force acts, the total momentum after a collision is…',opts:[['a','zero'],['b','larger than before'],['c','equal to the total before']],a:'c',hint:'Watch the purple total line on the graph.',why:'Momentum is conserved: total momentum before = total momentum after.'},
+    {q:'A 100 kg player at 6 m/s tackles a stationary 100 kg player and they move off together. Their velocity is…',opts:[['a','3 m/s'],['b','6 m/s'],['c','0 m/s']],a:'a',hint:'Total momentum ÷ total mass.',why:'600 kg·m/s ÷ 200 kg = 3 m/s.'},
+    {q:'Two players with equal and opposite momentum collide and hold on. Afterwards they…',opts:[['a','move in the heavier player\'s direction'],['b','stop'],['c','move in the faster player\'s direction']],a:'b',hint:'Add the momenta, remembering direction.',why:'Equal and opposite momenta add to zero, so the combined velocity is zero.'}],
+  exam:[
+    {course:'vce',q:'A 95 kg ball carrier running at 7 m/s is tackled head-on by a 110 kg defender running at 5 m/s, and they move together after the tackle. <span class="cmd">Explain</span>, using conservation of momentum, which direction the players move after impact.',marks:3,scheme:['Ball carrier p = 95 × 7 = 665 kg·m/s; defender p = 110 × 5 = 550 kg·m/s in the opposite direction.','Total momentum before = 665 − 550 = 115 kg·m/s in the ball carrier\'s direction, and momentum is conserved.','So they move together in the ball carrier\'s original direction (≈ 0.56 m/s).']},
+    {course:'ib',q:'A 90 kg player running at 8.0 m/s tackles a stationary 100 kg player and they move off together. <span class="cmd">Calculate</span> their common velocity.',marks:2,scheme:['Total momentum = 90 × 8.0 = 720 kg·m/s.','v = 720 ÷ 190 = 3.8 m/s (in the tackler\'s direction).']}],
+  sim:simCons()});
+
+/* =========================================================
+   7. PROJECTILE MOTION
+   ========================================================= */
+function simProj(){
+  let ctx,gctx,d;const S={ghosts:[],kind:'shot',ck:'',tries:[],revealed:false};const anim=animator(step);const optC={};
+  function calc(h,th,v){const r=th*Math.PI/180,vx=v*Math.cos(r),vy=v*Math.sin(r),T=(vy+Math.sqrt(vy*vy+2*g*h))/g;return{h,th,v,vx,vy,T,R:vx*T,peak:h+vy*vy/(2*g),tp:vy/g};}
+  function read(){return calc(num('pH'),num('pA'),num('pV'));}
+  function optimum(h,v){const k=h+'|'+v;if(optC[k])return optC[k];let b={a:45,R:0};for(let a=1;a<=89;a+=0.1){const R=calc(h,a,v).R;if(R>b.R)b={a,R};}return optC[k]=b;}
+  function path(q,tEnd){const pts=[];const n=90;for(let i=0;i<=n;i++){const t=tEnd*i/n;pts.push([q.vx*t,q.h+q.vy*t-.5*g*t*t]);}return pts;}
+  function step(dt){S.t=Math.min(d.T,S.t+dt);const end=S.t>=d.T;if(end){S.done=true;S.last=d;challengeHit();}api.update();api.draw();if(end){finish('projectile');return false;}}
+  function challengeHit(){const k=d.h+'|'+d.v;if(k!==S.ck){S.ck=k;S.tries=[];S.revealed=false;}S.tries.push({a:d.th,R:d.R});renderChallenge();}
+  function renderChallenge(){const k=num('pH')+'|'+num('pV');if(k!==S.ck){S.ck=k;S.tries=[];S.revealed=false;}
+    const n=S.tries.length,best=n?S.tries.reduce((a,b)=>b.R>a.R?b:a):null,h=num('pH'),v=num('pV'),o=optimum(h,v);
+    let html=`<h4>🎯 Optimum angle challenge</h4><p>Keep the release height (${fmt(h,2)} m) and speed (${fmt(v,1)} m/s) fixed. Change <b>only the angle</b>. Which angle throws furthest?</p>`;
+    html+=`<p>Throws: <b>${n}</b>${best?` · Best so far: <b>${fmt(best.a,0)}° → ${fmt(best.R,2)} m</b>`:''}</p>`;
+    if(S.revealed)html+=`<p class="win">Optimum: ${fmt(o.a,1)}° → ${fmt(o.R,2)} m. ${h>0.05?'It is below 45° because the release point is above the landing point.':'Released from ground level, the optimum is 45°.'}</p>`;
+    else if(n>=3)html+=`<button class="btn tiny" type="button" id="pReveal">Reveal the optimum</button>`;
+    else html+=`<p style="color:#8a6a2a">Make ${3-n} more throw${3-n>1?'s':''} to unlock the answer.</p>`;
+    setChallenge('projectile',html);const b=$('pReveal');if(b)b.onclick=()=>{S.revealed=true;renderChallenge();};}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    onPreset(p){S.kind=p.kind||'shot';},
+    reset(full){anim.stop();if(S.done&&S.last){S.ghosts.push({pts:path(S.last,S.last.T),R:S.last.R});if(S.ghosts.length>3)S.ghosts.shift();}
+      if(full)S.ghosts=[];d=read();Object.assign(S,{t:0,started:false,done:false,last:null});renderChallenge();},
+    update(){d=read();setM('pMvx',fmt(d.vx,2)+' m/s');setM('pMvy',fmt(d.vy,2)+' m/s');setM('pMT',fmt(d.T,2)+' s');setM('pMpeak',fmt(d.peak,2)+' m');setM('pMR',fmt(d.R,2)+' m');
+      setW('projectile',`vₓ = v cos θ = ${fmt(d.v,1)} × cos ${d.th}° = <b>${fmt(d.vx,2)} m/s</b><br>v_y = v sin θ = ${fmt(d.v,1)} × sin ${d.th}° = <b>${fmt(d.vy,2)} m/s</b><br>Peak height = h + v_y² ÷ 2g = ${fmt(d.h,2)} + ${fmt(d.vy*d.vy/(2*g),2)} = <b>${fmt(d.peak,2)} m</b><br>Flight time: solve h + v_y·t − ½gt² = 0 → <b>t = ${fmt(d.T,2)} s</b><br>Range = vₓ × t = ${fmt(d.vx,2)} × ${fmt(d.T,2)} = <b>${fmt(d.R,2)} m</b>`);},
+    draw(){const W=ctx.W,H=ctx.H,gy=H-44,x0=64;sky(ctx);ground(ctx,gy,'grass');
+      const o=optimum(d.h,d.v),xW=Math.max(o.R,...S.ghosts.map(q=>q.R),5)*1.1;
+      const yW=Math.max(d.peak,d.h+0.5,...S.ghosts.map(q=>Math.max(...q.pts.map(p=>p[1]))),2.5)*1.18;
+      const s=Math.min((W-x0-30)/xW,(gy-24)/yW),P=(x,y)=>[x0+x*s,gy-y*s];
+      const xs=niceStep(xW/9);ctx.font='600 12px '+FONT;ctx.textAlign='center';
+      for(let i=1;i*xs<=xW;i++){const [X]=P(i*xs,0);ctx.fillStyle='rgba(255,255,255,.55)';ctx.fillRect(X-1,gy,2,8);ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText(fmt(i*xs,xs<1?1:0)+' m',X,gy+24);}
+      const ys=niceStep(yW/4);ctx.textAlign='left';for(let i=1;i*ys<yW;i++){const [,Y]=P(0,i*ys);ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(x0,Y,W-x0-20,1);ctx.fillStyle=C.dim;ctx.fillText(fmt(i*ys,ys<1?1:0)+' m',6,Y+4);}
+      S.ghosts.forEach((q,i)=>{ctx.strokeStyle='rgba(255,255,255,'+(0.18+i*0.08)+')';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();q.pts.forEach((p,j)=>{const [X,Y]=P(p[0],p[1]);j?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});ctx.stroke();ctx.setLineDash([]);const [lx]=P(q.R,0);tag(ctx,fmt(q.R,1)+' m',lx,gy-14,C.dim);});
+      const [rx,ry]=P(0,d.h);ctx.strokeStyle='rgba(255,255,255,.5)';ctx.setLineDash([4,4]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(rx,gy);ctx.lineTo(rx,ry);ctx.stroke();ctx.setLineDash([]);
+      if(d.h>0.05)tag(ctx,'h = '+fmt(d.h,2)+' m',rx+8,(gy+ry)/2,C.text,'left');
+      if(!S.started){const r=d.th*Math.PI/180,L=86,ex=rx+Math.cos(r)*L,ey=ry-Math.sin(r)*L;
+        arrow(ctx,rx,ry,rx+Math.cos(r)*L,ry,C.vel,'vₓ',{dash:[6,5],lw:3,lx:rx+Math.cos(r)*L/2,ly:ry+18});
+        arrow(ctx,rx,ry,rx,ry-Math.sin(r)*L,C.vel,'v_y',{dash:[6,5],lw:3,left:true});
+        arrow(ctx,rx,ry,ex,ey,C.gold,fmt(d.v,1)+' m/s at '+d.th+'°',{lx:ex+10,ly:ey-14,align:'left'});
+        ctx.strokeStyle=C.gold;ctx.lineWidth=2;ctx.beginPath();ctx.arc(rx,ry,30,-r,0);ctx.stroke();
+        ball(ctx,rx,ry,9,S.kind);}
+      else{const pts=path(d,S.t);ctx.strokeStyle=C.gold;ctx.lineWidth=4;ctx.beginPath();pts.forEach((p,j)=>{const [X,Y]=P(p[0],p[1]);j?ctx.lineTo(X,Y):ctx.moveTo(X,Y);});ctx.stroke();
+        ctx.fillStyle='rgba(255,209,102,.6)';for(let t=0.1;t<S.t;t+=0.1){const [X,Y]=P(d.vx*t,d.h+d.vy*t-.5*g*t*t);ctx.beginPath();ctx.arc(X,Y,3,0,Math.PI*2);ctx.fill();}
+        const vyN=d.vy-g*S.t,[bx,by]=P(d.vx*S.t,Math.max(0,d.h+d.vy*S.t-.5*g*S.t*S.t));
+        if(!S.done){arrow(ctx,bx,by,bx+d.vx*5,by,C.vel,'vₓ '+fmt(d.vx,1),{lw:3,lx:bx+d.vx*5+28,ly:by});if(Math.abs(vyN)>0.3)arrow(ctx,bx,by,bx,by-vyN*5,C.vel,'v_y '+fmt(vyN,1),{lw:3,left:true});}
+        ball(ctx,bx,by-9,9,S.kind);
+        if(S.done){const [ax,ay]=P(d.vx*d.tp,d.peak);if(d.tp>0.02){ctx.strokeStyle='rgba(255,255,255,.4)';ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(ax,ay);ctx.lineTo(ax,gy);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle=C.gold;ctx.beginPath();ctx.arc(ax,ay,5,0,Math.PI*2);ctx.fill();tag(ctx,'Peak '+fmt(d.peak,2)+' m · v_y = 0',ax,ay-18,C.gold);}
+          const [lx]=P(d.R,0);tag(ctx,'Range '+fmt(d.R,2)+' m',lx,gy-30,C.gold);}}
+      hud(ctx,['t = '+fmt(S.t,2)+' s','Air resistance ignored'],W-200,14);
+      const vyEnd=d.vy-g*d.T;
+      plot(gctx,{xMax:S.started?d.T:1,yMin:Math.min(0,vyEnd)*1.15,yMax:Math.max(d.vx,d.vy,1)*1.15,xLabel:'Time (s)',yLabel:'Velocity (m/s)',empty:S.started?null:'Launch to plot vₓ and v_y',
+        series:S.started?[{pts:[[0,d.vx],[S.t,d.vx]],color:GC.vel,label:'Horizontal vₓ'},{pts:[[0,d.vy],[S.t,d.vy-g*S.t]],color:GC.amber,label:'Vertical v_y'}]:[],markerX:S.started?S.t:null});},
+    run(){d=read();S.started=true;S.t=0;anim.start();},
+    predictAnswer(){return read().R;}
+  };return api;}
+def({id:'projectile',name:'Projectile Motion',icon:'🎯',course:'both',sport:'Shot put, long jump and goal kicks',
+  title:'Projectile motion',
+  def:'A projectile\'s flight is determined by its release speed, angle and height. Ignoring air resistance, horizontal velocity stays constant while gravity changes vertical velocity by 9.8 m/s every second.',
+  formula:'vₓ = v cos θ   v_y = v sin θ   g = 9.8 m/s²',stageTitle:'Flight path',legend:['vel'],
+  note:'The gold path is drawn as it flies. Your previous three throws stay as faded paths so you can compare them. Real long kicks travel less far than this model because of air resistance.',runLabel:'Launch',challenge:true,
+  controls:[
+    {type:'range',id:'pH',label:'Release height',min:0,max:3,step:0.05,value:2.1,unit:'m',dp:2},
+    {type:'range',id:'pA',label:'Release angle',min:5,max:80,step:1,value:40,unit:'°',dp:0},
+    {type:'range',id:'pV',label:'Release speed',min:3,max:30,step:0.5,value:13,unit:'m/s',dp:1}],
+  presets:[
+    {label:'Shot put (2.1 m, 40°, 13 m/s)',kind:'shot',set:{pH:2.1,pA:40,pV:13}},
+    {label:'Long jump take-off (centre of mass)',kind:'#ffd166',set:{pH:1.1,pA:20,pV:9.5}},
+    {label:'Soccer goal kick from the ground',kind:'soccer',set:{pH:0,pA:35,pV:25}},
+    {label:'Basketball lob pass (lands at floor level)',kind:'basketball',set:{pH:2.2,pA:52,pV:7.5}}],
+  metrics:[{id:'pMvx',label:'Horizontal vₓ'},{id:'pMvy',label:'Vertical v_y (release)'},{id:'pMT',label:'Flight time',hide:1},{id:'pMpeak',label:'Peak height',hide:1},{id:'pMR',label:'Range',hide:1}],
+  graph:{title:'Velocity components vs time',note:'vₓ stays flat; v_y falls by 9.8 m/s each second and is zero at the peak'},
+  predict:{type:'number',q:'Predict the horizontal range.',unit:'m',placeholder:'e.g. 15'},
+  questions:[
+    {q:'Ignoring air resistance, the horizontal velocity during flight…',opts:[['a','decreases'],['b','stays constant'],['c','increases']],a:'b',hint:'Is there any horizontal force acting during flight?',why:'With no horizontal force (no air resistance), vₓ stays constant for the whole flight.'},
+    {q:'At the highest point of the flight, the vertical velocity is…',opts:[['a','zero'],['b','at its maximum'],['c','equal to the horizontal velocity']],a:'a',hint:'Look where the orange line crosses zero on the graph.',why:'At the peak the projectile stops rising and is about to fall, so v_y = 0 (vₓ is unchanged).'},
+    {q:'When release height is above landing height, the optimum release angle is…',opts:[['a','exactly 45°'],['b','more than 45°'],['c','less than 45°']],a:'c',hint:'Try the optimum angle challenge with the shot put preset.',why:'The extra height already gives flight time, so a lower angle (more horizontal velocity) gives a longer range.'}],
+  exam:[
+    {course:'vce',q:'<span class="cmd">Explain</span> why the optimal release angle for a shot put is less than 45°.',marks:3,scheme:['The shot is released from above the landing height (≈ 2 m).','This release height already provides extra flight time, so a lower angle increases the horizontal velocity component and the range.','Athletes can also generate greater release speed at lower release angles (body position / muscle force), further favouring an angle below 45°.']},
+    {course:'ib',q:'A long jumper takes off at 9.5 m/s at an angle of 20° to the horizontal. <span class="cmd">Calculate</span> the horizontal and vertical components of the take-off velocity.',marks:2,scheme:['vₓ = 9.5 cos 20° = 8.9 m/s.','v_y = 9.5 sin 20° = 3.2 m/s.']}],
+  sim:simProj()});
+
+/* =========================================================
+   8. ANGULAR MOMENTUM  (variables: I and ω, L locked)
+   ========================================================= */
+function simAng(){
+  const L=30,IMIN=3.5,IMAX=12;
+  const KEY={layout:{head:[0,-62],neck:[0,-46],hip:[0,6],knee:[0,40],foot:[0,74],elbow:[5,-70],hand:[7,-94]},
+    pike:{head:[-24,-44],neck:[-20,-28],hip:[-10,16],knee:[14,-2],foot:[38,-20],elbow:[4,-14],hand:[26,-12]},
+    tuck:{head:[10,-36],neck:[2,-24],hip:[-12,14],knee:[16,-12],foot:[14,16],elbow:[12,-6],hand:[18,2]}};
+  let ctx,gctx;const S={I:6,th:0,trail:[],ghost:[],gt:0};const idle=animator(spin);const run=animator(step);
+  const W_=()=>L/S.I;
+  function shapeName(I){return I<=4.5?'Tight tuck':I<=5.8?'Tuck':I<=7.5?'Pike':I<=10?'Partly open':'Straight (layout)';}
+  function pose(I){const lerp=(A,B,u)=>{const P={};for(const k in A)P[k]=[A[k][0]+(B[k][0]-A[k][0])*u,A[k][1]+(B[k][1]-A[k][1])*u];return P;};
+    if(I>=6.5)return lerp(KEY.layout,KEY.pike,(IMAX-I)/(IMAX-6.5));return lerp(KEY.pike,KEY.tuck,(6.5-I)/(6.5-IMIN));}
+  function drawGym(x,y,I,th,alpha){const P=pose(I);ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(-th);ctx.scale(1.45,1.45);ctx.lineCap='round';ctx.lineJoin='round';
+    limb(ctx,[P.hip,P.knee,P.foot],'#d39a2b',10);limb(ctx,[P.neck,P.elbow,P.hand],'#d39a2b',8);
+    limb(ctx,[P.hip,P.neck],C.gold,15);limb(ctx,[[P.hip[0]+3,P.hip[1]],[P.knee[0]+3,P.knee[1]],[P.foot[0]+3,P.foot[1]]],C.gold,10);limb(ctx,[[P.neck[0]+2,P.neck[1]],[P.elbow[0]+3,P.elbow[1]],[P.hand[0]+3,P.hand[1]]],C.gold,8);
+    ctx.fillStyle='#f1c9a0';ctx.beginPath();ctx.arc(P.head[0],P.head[1],10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#ff5c74';ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();ctx.restore();}
+  // continuous spin (always running while the tab is visible)
+  function spin(dt){S.th+=W_()*dt*0.5;S.gt+=dt;if(S.gt>=0.12){S.ghost.push({th:S.th,I:S.I});if(S.ghost.length>4)S.ghost.shift();S.gt=0;}api.drawFrame();}
+  // Run: pull into a full tuck so students can test their prediction
+  function step(dt){S.rt+=dt;const u=Math.min(1,S.rt/1.8),e=u<.5?2*u*u:1-Math.pow(-2*u+2,2)/2;S.I=S.I0+(IMIN-S.I0)*e;S.trail.push([S.I,W_()]);
+    setVal('aI',S.I.toFixed(1));setVal('aW',W_().toFixed(2));api.update();if(u>=1){finish('angular');return false;}}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},
+    stop(){idle.stop();run.stop();},
+    onControl(id){if(id==='aI'){S.I=clamp(num('aI'),IMIN,IMAX);setVal('aW',W_().toFixed(2));}
+      else if(id==='aW'){S.I=clamp(L/num('aW'),IMIN,IMAX);setVal('aI',S.I.toFixed(1));}
+      S.trail.push([S.I,W_()]);if(S.trail.length>400)S.trail.shift();},
+    reset(full){run.stop();if(full){S.I=num('aI');S.trail=[];setVal('aW',W_().toFixed(2));
+      setChallenge('angular','<h4>🤸 Try these</h4><p>1. Halve I (e.g. 12 → 6). What happens to ω? Does L change?</p><p>2. Find the body shape that gives exactly ω = 5 rad/s.</p><p>3. Drag the ω slider instead. What does the gymnast have to do with their body to spin faster?</p>');}},
+    update(){const w=W_();setM('aM1',fmt(S.I,1)+' kg·m²');setM('aM2',fmt(w,2)+' rad/s');setM('aM3',fmt(L,1)+' kg·m²/s 🔒');setM('aM4',fmt(2*Math.PI/w,2)+' s');setM('aM5',shapeName(S.I));
+      setW('angular',`Angular momentum is set at take-off and stays constant in the air: L = <b>${L} kg·m²/s</b><br>Right now: L = I × ω = ${fmt(S.I,1)} × ${fmt(w,2)} = <b>${fmt(S.I*w,1)} kg·m²/s</b><br>So ω = L ÷ I = ${L} ÷ ${fmt(S.I,1)} = <b>${fmt(w,2)} rad/s</b><br>Halve I → ω doubles: ${L} ÷ ${fmt(S.I/2,2)} = ${fmt(L/(S.I/2),2)} rad/s<br>Full tuck (I = ${IMIN}): ω = ${L} ÷ ${IMIN} = <b>${fmt(L/IMIN,2)} rad/s</b>`);},
+    drawFrame(){const Wd=ctx.W,H=ctx.H,w=W_();sky(ctx);ground(ctx,H-26,'mat');
+      const cx=230,cy=180;
+      S.ghost.forEach((g0,i)=>drawGym(cx,cy,g0.I,g0.th,0.08+i*0.04));
+      drawGym(cx,cy,S.I,S.th,1);
+      const sweep=clamp(w*0.28,0.5,2.7);arcArrow(ctx,cx,cy,128,-Math.PI/2+0.3,-Math.PI/2+0.3-sweep,C.vel,5);
+      tag(ctx,'ω = '+fmt(w,2)+' rad/s',cx,28,C.vel);
+      tag(ctx,'Axis of rotation (centre of mass)',cx,H-50,C.dim);
+      // equation board
+      const bx=470,by=34,bw=410,bh=300;ctx.fillStyle='rgba(5,12,28,.62)';roundRect(ctx,bx,by,bw,bh,14);ctx.fill();
+      ctx.font='800 14px '+FONT;ctx.fillStyle=C.dim;ctx.textAlign='center';ctx.fillText('ANGULAR MOMENTUM IS CONSERVED IN THE AIR',bx+bw/2,by+28);
+      ctx.font='800 34px '+FONT;const y1=by+82;
+      ctx.fillStyle=C.mom;ctx.fillText(fmt(S.I,1),bx+70,y1);ctx.fillStyle=C.text;ctx.fillText('×',bx+138,y1);
+      ctx.fillStyle=C.vel;ctx.fillText(fmt(w,2),bx+215,y1);ctx.fillStyle=C.text;ctx.fillText('=',bx+290,y1);ctx.fillStyle=C.teamA;ctx.fillText(String(L),bx+352,y1);
+      ctx.font='700 13px '+FONT;ctx.fillStyle=C.mom;ctx.fillText('I (kg·m²)',bx+70,y1+22);ctx.fillStyle=C.vel;ctx.fillText('ω (rad/s)',bx+215,y1+22);ctx.fillStyle=C.teamA;ctx.fillText('L 🔒 locked',bx+352,y1+22);
+      // bars: I and ω trade off
+      const barX=bx+70,barW=310,bar=(lab,val,max,col,y)=>{ctx.textAlign='left';ctx.fillStyle=C.dim;ctx.font='700 13px '+FONT;ctx.fillText(lab,bx+20,y+15);ctx.fillStyle='rgba(255,255,255,.1)';roundRect(ctx,barX,y,barW,20,6);ctx.fill();ctx.fillStyle=col;roundRect(ctx,barX,y,Math.max(6,val/max*barW),20,6);ctx.fill();};
+      bar('I',S.I,IMAX,C.mom,by+150);bar('ω',w,L/IMIN,C.vel,by+186);bar('L 🔒',L,L,C.teamA,by+222);
+      ctx.textAlign='center';ctx.font='600 13px '+FONT;ctx.fillStyle=C.text;ctx.fillText(shapeName(S.I)+' · one somersault every '+fmt(2*Math.PI/w,2)+' s',bx+bw/2,by+278);ctx.textAlign='left';
+      // graph: ω vs I with constant-area rectangle
+      const Ig=[];for(let I=3;I<=12.6;I+=0.05)Ig.push([I,L/I]);
+      plot(gctx,{xMax:13,yMax:11,xLabel:'Moment of inertia I (kg·m²)',yLabel:'Angular velocity ω (rad/s)',
+        series:[{pts:[[0,w],[S.I,w]],color:GC.amber,fill:true,width:1.5,label:'Area = I × ω = '+L+' (always)'},{pts:[[S.I,0],[S.I,w]],color:GC.amber,width:1.5},
+          {pts:Ig,color:GC.mom,label:'ω = L ÷ I'},{pts:S.trail.slice(-200),color:'rgba(2,132,199,.45)',width:6}],
+        points:[{x:S.I,y:w,color:GC.vel}]});},
+    draw(){api.drawFrame();if(!idle.running&&$('angular').classList.contains('active'))idle.start();},
+    run(){run.stop();$('angularPreset').value='';S.I0=S.I;S.rt=0;S.trail=[[S.I,W_()]];run.start();if(!idle.running)idle.start();},
+    predictAnswer(){return L/IMIN;}
+  };return api;}
+def({id:'angular',name:'Angular Momentum',icon:'🤸',course:'both',sport:'Gymnast somersault in the air',
+  title:'Conservation of angular momentum',
+  def:'Angular momentum (L) is generated at take-off and then stays constant while the athlete is in the air. Because L = I × ω, changing body shape changes moment of inertia, and angular velocity must change in the opposite direction.',
+  formula:'L = I × ω  (L constant in flight)',stageTitle:'Change I or ω: L stays locked',legend:['vel','mom'],
+  note:'Move either slider: the other one adjusts automatically so I × ω always equals 30 kg·m²/s. Faded figures show where the gymnast was a moment ago. They are further apart when spinning faster. The red dot is the axis of rotation.',runLabel:'Pull into a full tuck',
+  controls:[
+    {type:'range',id:'aI',label:'Moment of inertia I (body shape)',min:3.5,max:12,step:0.1,value:6,unit:'kg·m²',dp:1},
+    {type:'range',id:'aW',label:'Angular velocity ω',min:2.5,max:8.58,step:0.01,value:5,unit:'rad/s',dp:2}],
+  presets:[
+    {label:'Straight / layout (I = 12 kg·m²)',set:{aI:12}},
+    {label:'Pike (I = 6.5 kg·m²)',set:{aI:6.5}},
+    {label:'Tight tuck (I = 3.5 kg·m²)',set:{aI:3.5}}],
+  metrics:[{id:'aM1',label:'Moment of inertia I'},{id:'aM2',label:'Angular velocity ω'},{id:'aM3',label:'Angular momentum L'},{id:'aM4',label:'Time per somersault'},{id:'aM5',label:'Body shape'}],
+  graph:{title:'Angular velocity vs moment of inertia',note:'Every point on the curve has the same L: the shaded rectangle never changes area'},
+  predict:{type:'number',q:'L stays at 30 kg·m²/s. Predict ω when the gymnast pulls into a full tuck (I = 3.5 kg·m²).',unit:'rad/s',placeholder:'e.g. 6'},
+  challenge:true,
+  questions:[
+    {q:'In flight, a gymnast halves their moment of inertia. Their angular velocity…',opts:[['a','halves'],['b','doubles'],['c','stays the same']],a:'b',hint:'L = I × ω and L cannot change.',why:'L is constant, so if I halves, ω must double to keep I × ω the same.'},
+    {q:'Pulling into a tighter tuck makes moment of inertia…',opts:[['a','decrease'],['b','increase'],['c','stay the same']],a:'a',hint:'Mass moves closer to the axis of rotation.',why:'Bringing mass closer to the axis of rotation reduces moment of inertia.'},
+    {q:'When is a gymnast\'s angular momentum generated?',opts:[['a','During flight, by tucking'],['b','At take-off, from an eccentric force applied by the ground'],['c','On landing']],a:'b',hint:'Once airborne, L cannot change.',why:'Angular momentum comes from an eccentric (off-centre) force at take-off. In flight it is conserved; tucking only changes how it is shared between I and ω.'},
+    {q:'Why does a gymnast open out before landing?',opts:[['a','To create more angular momentum'],['b','To increase I and slow rotation for a controlled landing'],['c','To gain extra height']],a:'b',hint:'What happens to ω when I increases?',why:'Opening out increases I, which decreases ω, so the gymnast can control the landing.'}],
+  exam:[
+    {course:'vce',q:'<span class="cmd">Explain</span> how a diver uses changes in body position to control rotation during a forward somersault and achieve a vertical entry.',marks:4,scheme:['Angular momentum is generated at take-off and is conserved during flight.','Tucking brings mass closer to the axis of rotation, reducing moment of inertia.','With angular momentum constant, angular velocity increases, so the diver rotates faster.','Opening out before entry increases moment of inertia, reducing angular velocity so rotation is slowed and controlled for a clean entry.']},
+    {course:'ib',q:'A gymnast leaves the floor with an angular momentum of 30 kg·m²/s. <span class="cmd">Calculate</span> the angular velocity in a layout (I = 12.0 kg·m²) and in a tuck (I = 3.5 kg·m²).',marks:2,scheme:['Layout: ω = 30 ÷ 12.0 = 2.5 rad/s.','Tuck: ω = 30 ÷ 3.5 = 8.6 rad/s.']}],
+  sim:simAng()});
+
+/* =========================================================
+   9. COEFFICIENT OF RESTITUTION (IB)
+   ========================================================= */
+function simCor(){
+  let ctx,gctx,d;const S={kA:'tennis',kB:'tennis',nA:'Ball A',nB:'Ball B'};const anim=animator(step);
+  function read(){return{h:num('rH'),eA:num('rEA'),eB:num('rEB')};}
+  function nb(e){return{y:d.h,vy:0,e,b:0,peak1:null,rising:false,done:false,pts:[[0,d.h]]};}
+  function adv(B,dt,t){if(B.done){B.pts.push([t,0]);return;}B.vy-=g*dt;B.y+=B.vy*dt;
+    if(B.y<=0&&B.vy<0){B.y=0;B.vy=-B.vy*B.e;B.b++;B.rising=true;if(B.vy<0.4)B.done=true;}
+    if(B.rising&&B.vy<=0){B.rising=false;if(B.b===1)B.peak1=B.y;}B.pts.push([t,B.y]);}
+  function step(dt){const n=4;for(let i=0;i<n;i++){S.t+=dt/n;adv(S.A,dt/n,S.t);adv(S.B,dt/n,S.t);}
+    const end=S.t>=S.tEnd||(S.A.done&&S.B.done);if(end)S.done=true;api.update();api.draw();if(end){finish('cor');return false;}}
+  function cmp(){return Math.abs(d.eA-d.eB)<0.005?'same':d.eA>d.eB?'A':'B';}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    onPreset(p){S.kA=p.kinds[0];S.kB=p.kinds[1];S.nA=p.names[0];S.nB=p.names[1];},
+    onControl(id,fromPreset){if(!fromPreset&&(id==='rEA'||id==='rEB')){if(id==='rEA')S.nA='Ball A';else S.nB='Ball B';}},
+    reset(){anim.stop();d=read();const t1=Math.sqrt(2*d.h/g);S.tEnd=Math.min(6,t1+2*t1*Math.max(d.eA,d.eB)/(1-Math.max(d.eA,d.eB))+0.3);Object.assign(S,{t:0,started:false,done:false,A:nb(d.eA),B:nb(d.eB)});},
+    update(){d=read();const vi=Math.sqrt(2*g*d.h);setM('rM1',d.eA.toFixed(2));setM('rM2',d.eB.toFixed(2));setM('rM3',fmt(d.eA*d.eA*d.h,2)+' m');setM('rM4',fmt(d.eB*d.eB*d.h,2)+' m');setM('rM5',fmt(vi,2)+' m/s');
+      setW('cor',`Impact speed = √(2gh) = √(2 × 9.8 × ${fmt(d.h,2)}) = <b>${fmt(vi,2)} m/s</b><br>e = rebound speed ÷ impact speed = √(bounce height ÷ drop height)<br>A: rebound speed = ${d.eA.toFixed(2)} × ${fmt(vi,2)} = ${fmt(d.eA*vi,2)} m/s → bounce = e² × h = ${d.eA.toFixed(2)}² × ${fmt(d.h,2)} = <b>${fmt(d.eA*d.eA*d.h,2)} m</b><br>B: rebound speed = ${d.eB.toFixed(2)} × ${fmt(vi,2)} = ${fmt(d.eB*vi,2)} m/s → bounce = e² × h = ${d.eB.toFixed(2)}² × ${fmt(d.h,2)} = <b>${fmt(d.eB*d.eB*d.h,2)} m</b>`);},
+    draw(){const W=ctx.W,H=ctx.H,gy=H-40;sky(ctx);ground(ctx,gy,'court');const sy=(gy-44)/3.2,r=17;
+      ctx.font='600 12px '+FONT;for(let m=0;m<=3;m+=0.5){const Y=gy-m*sy;ctx.fillStyle='rgba(255,255,255,.08)';ctx.fillRect(56,Y,W-80,1);ctx.fillStyle=C.dim;ctx.fillText(m.toFixed(1)+' m',10,Y+4);}
+      const dy=gy-d.h*sy;ctx.strokeStyle='rgba(255,255,255,.6)';ctx.setLineDash([6,5]);ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(150,dy);ctx.lineTo(W-60,dy);ctx.stroke();ctx.setLineDash([]);tag(ctx,'Drop height '+fmt(d.h,2)+' m',W-140,dy-16,C.text);
+      [[S.A,330,S.kA,S.nA,'#ffd166'],[S.B,590,S.kB,S.nB,'#7dd3fc']].forEach(([B,x,k,n,col])=>{
+        if(B.peak1!=null){const py=gy-B.peak1*sy;ctx.strokeStyle=col;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(x-60,py);ctx.lineTo(x+60,py);ctx.stroke();ctx.setLineDash([]);tag(ctx,'1st bounce '+fmt(B.peak1,2)+' m',x+66,py,col,'left');}
+        const Y=gy-B.y*sy-r;shadowEllipse(ctx,x,gy,r*(0.6+0.4*Math.max(0,1-B.y/3)));ball(ctx,x,Y,r,k);
+        tag(ctx,n+' · e = '+B.e.toFixed(2),x,28,col);});
+      const hide=!S.started;
+      plot(gctx,{xMax:S.tEnd,yMax:Math.max(d.h*1.15,0.5),xLabel:'Time (s)',yLabel:'Height (m)',empty:hide?'Drop the balls to plot height against time':null,
+        series:hide?[]:[{pts:S.A.pts,color:GC.amber,label:S.nA},{pts:S.B.pts,color:GC.vel,label:S.nB}],markerX:S.started?S.t:null});},
+    run(){d=read();S.started=true;anim.start();},
+    predictAnswer(){d=read();return cmp();}
+  };return api;}
+def({id:'cor',name:'Coefficient of Restitution',icon:'🎾',course:'ib',sport:'Balls bouncing on different surfaces',
+  title:'Coefficient of restitution',
+  def:'The coefficient of restitution (e) describes how elastic a collision is: the speed of separation divided by the speed of approach. It depends on BOTH surfaces (the ball and what it hits), and on temperature and impact speed.',
+  formula:'e = v(after) ÷ v(before) = √(h(bounce) ÷ h(drop))',stageTitle:'Drop test',legend:['vel'],
+  note:'e = 1 would be a perfectly elastic bounce (no energy lost); e = 0 means no bounce at all. Each bounce loses the same proportion of speed, so the bounces shrink. Values in the presets are typical approximations.',runLabel:'Drop balls',
+  controls:[
+    {type:'range',id:'rH',label:'Drop height',min:0.5,max:3,step:0.05,value:2,unit:'m',dp:2},
+    {type:'range',id:'rEA',label:'e for ball A',min:0.1,max:0.95,step:0.01,value:0.75,unit:'',dp:2},
+    {type:'range',id:'rEB',label:'e for ball B',min:0.1,max:0.95,step:0.01,value:0.55,unit:'',dp:2}],
+  presets:[
+    {label:'Squash ball: cold vs warmed up',kinds:['squash','squash'],names:['Cold squash ball','Warm squash ball'],set:{rH:2,rEA:0.32,rEB:0.48}},
+    {label:'Basketball: on court vs on grass',kinds:['basketball','basketball'],names:['On a court','On grass'],set:{rH:1.8,rEA:0.83,rEB:0.5}},
+    {label:'Tennis ball: new vs old and flat',kinds:['tennis','tennis'],names:['New ball','Old, flat ball'],set:{rH:2.5,rEA:0.75,rEB:0.55}},
+    {label:'Cricket ball: hard dry pitch vs damp pitch',kinds:['cricket','cricket'],names:['Hard dry pitch','Damp pitch'],set:{rH:2,rEA:0.55,rEB:0.38}}],
+  metrics:[{id:'rM1',label:'e (A)'},{id:'rM2',label:'e (B)'},{id:'rM3',label:'1st bounce A',hide:1},{id:'rM4',label:'1st bounce B',hide:1},{id:'rM5',label:'Impact speed'}],
+  graph:{title:'Height–time graph',note:'Each bounce peak is e² × the previous height'},
+  predict:{q:'Which ball will bounce higher?',options:[['A','Ball A'],['B','Ball B'],['same','Same height']]},
+  questions:[
+    {q:'From a drop test, the coefficient of restitution is calculated as…',opts:[['a','bounce height ÷ drop height'],['b','√(bounce height ÷ drop height)'],['c','drop height ÷ bounce height']],a:'b',hint:'e is a ratio of speeds, and speed relates to √height.',why:'e = v(after) ÷ v(before), and since v = √(2gh), e = √(bounce height ÷ drop height).'},
+    {q:'A tennis ball dropped from 2.0 m bounces to 1.28 m. e =',opts:[['a','0.64'],['b','0.80'],['c','1.56']],a:'b',hint:'Take the square root of the height ratio.',why:'√(1.28 ÷ 2.0) = √0.64 = 0.80.'},
+    {q:'Why does a squash ball bounce higher once it has been warmed up?',opts:[['a','It becomes more elastic, so e increases'],['b','It becomes heavier'],['c','The court becomes softer']],a:'a',hint:'Compare the cold and warm squash ball preset.',why:'A warmer ball deforms and recovers more efficiently, losing less energy, so e and the rebound height increase.'}],
+  exam:[
+    {course:'ib',q:'A tennis ball dropped from 2.54 m rebounds to 1.40 m. <span class="cmd">Calculate</span> the coefficient of restitution.',marks:2,scheme:['e = √(bounce height ÷ drop height) = √(1.40 ÷ 2.54).','e = 0.74.']},
+    {course:'ib',q:'<span class="cmd">Explain</span> why a cricket ball bounces lower on a damp pitch than on a hard, dry pitch.',marks:2,scheme:['A damp pitch is softer and deforms more on impact, absorbing more energy (lost as heat / deformation).','So the coefficient of restitution between ball and pitch is lower, giving a lower rebound speed and height.']}],
+  sim:simCor()});
+
+/* =========================================================
+   10. COEFFICIENT OF FRICTION (IB): shoe drag test
+   ========================================================= */
+function simFric(){
+  // Typical (illustrative) static coefficients for shoe–surface pairs
+  const MU={court:{court:0.9,dusty:0.45,grass:0.6,wet:0.35,track:0.8},
+    boot:{court:0.5,dusty:0.3,grass:1.2,wet:0.8,track:0.6},
+    spike:{court:0.4,dusty:0.3,grass:0.9,wet:0.6,track:1.3},
+    worn:{court:0.6,dusty:0.3,grass:0.45,wet:0.25,track:0.55}};
+  const SHOE={court:{n:'Court shoe',c:'#e2e8f0',a:'#2563eb'},boot:{n:'Football boot',c:'#111827',a:'#facc15'},spike:{n:'Running spike',c:'#f97316',a:'#ffffff'},worn:{n:'Worn trainer',c:'#94a3b8',a:'#64748b'}};
+  const SURF={court:{n:'Clean indoor court',g:'court'},dusty:{n:'Dusty indoor court',g:'dusty'},grass:{n:'Dry grass',g:'grass'},wet:{n:'Wet grass',g:'wet'},track:{n:'Synthetic track',g:'track'}};
+  const TSLIP=1.6,TEND=3.4,DR=0.75;let ctx,gctx,d;const S={log:[]};const anim=animator(step);
+  function read(){const shoe=str('fShoe'),surf=str('fSurf'),m=num('fLoad'),R=m*g,mu=MU[shoe][surf];return{shoe,surf,m,R,mu,mud:mu*DR,Fs:mu*R,Fd:mu*DR*R};}
+  function pullAt(t){if(t<=TSLIP)return d.Fs*t/TSLIP;const u=t-TSLIP;return d.Fd+(d.Fs-d.Fd)*Math.exp(-u*18)+d.Fd*0.025*Math.sin(u*38);}
+  function step(dt){S.t=Math.min(TEND,S.t+dt);S.F=pullAt(S.t);S.pts.push([S.t,S.F]);if(S.t>TSLIP){S.slip=true;S.off=Math.min(150,S.off+55*dt);}
+    const end=S.t>=TEND;if(end){S.done=true;S.log.unshift({shoe:SHOE[d.shoe].n,surf:SURF[d.surf].n,m:d.m,R:d.R,F:d.Fs,mu:d.mu});if(S.log.length>6)S.log.pop();renderLog();}
+    api.update();api.draw();if(end){finish('friction');return false;}}
+  function renderLog(){const rows=S.log.map(r=>`<tr><td>${r.shoe}<br><span style="color:#8a6a2a">${r.surf}</span></td><td>${fmt(r.R,0)} N</td><td>${fmt(r.F,1)} N</td><td><b>${r.mu.toFixed(2)}</b></td></tr>`).join('');
+    setChallenge('friction',`<h4>🧪 Test log</h4>`+(S.log.length?`<table style="width:100%;border-collapse:collapse;font-size:12.5px"><tr style="text-align:left;color:#8a5300"><th>Shoe / surface</th><th>R</th><th>Peak F</th><th>μ</th></tr>${rows}</table>`:'<p>Your results appear here.</p>')+`<p style="margin-top:8px">Try: test the same shoe and surface with double the load. What happens to the peak force? What happens to μ?</p>`);}
+  function drawShoe(x,gy,type,m){const s=SHOE[type],L=250,H=78;ctx.save();ctx.translate(x,gy);
+    // grip features under the sole
+    ctx.fillStyle='#1f2937';
+    if(type==='boot'){for(let i=0;i<6;i++){roundRect(ctx,18+i*40,-2,14,12,3);ctx.fill();}}
+    if(type==='spike'){for(let i=0;i<5;i++){const sx=150+i*20;ctx.beginPath();ctx.moveTo(sx,-2);ctx.lineTo(sx+5,9);ctx.lineTo(sx+10,-2);ctx.fill();}}
+    const lift=type==='boot'?10:type==='spike'?8:0;ctx.translate(0,-lift);
+    ctx.fillStyle=type==='worn'?'#cbd5e1':'#f8fafc';roundRect(ctx,0,-16,L,16,6);ctx.fill();
+    if(type==='court'||type==='worn'){ctx.strokeStyle='rgba(0,0,0,.25)';ctx.lineWidth=2;for(let i=8;i<L-6;i+=type==='worn'?28:12){ctx.beginPath();ctx.moveTo(i,-2);ctx.lineTo(i+5,-2);ctx.stroke();}}
+    ctx.fillStyle=s.c;ctx.beginPath();ctx.moveTo(6,-16);ctx.lineTo(6,-58);ctx.quadraticCurveTo(10,-H,40,-H);ctx.lineTo(96,-H+4);ctx.quadraticCurveTo(150,-36,214,-30);ctx.quadraticCurveTo(L+4,-26,L,-16);ctx.closePath();ctx.fill();
+    ctx.fillStyle=s.a;ctx.beginPath();ctx.moveTo(60,-24);ctx.quadraticCurveTo(120,-58,190,-30);ctx.lineTo(176,-24);ctx.quadraticCurveTo(120,-44,74,-20);ctx.closePath();ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.8)';ctx.lineWidth=3;for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(100+i*16,-H+10+i*9);ctx.lineTo(112+i*16,-H+18+i*9);ctx.stroke();}
+    // weight plates sitting in the shoe
+    const n=clamp(Math.round(m/2.5),1,8);for(let i=0;i<n;i++){ctx.fillStyle=i%2?'#475569':'#334155';roundRect(ctx,26,-H-10-i*9,58,8,3);ctx.fill();}
+    tag(ctx,fmt(m,1)+' kg load',55,-H-24-n*9,C.text);
+    ctx.restore();return lift;}
+  const api={
+    init(c,gc){ctx=c;gctx=gc;},stop(){anim.stop();},
+    reset(full){anim.stop();d=read();Object.assign(S,{t:0,F:0,slip:false,off:0,started:false,done:false,pts:[]});if(full)S.log=[];renderLog();},
+    update(){d=read();setM('fM1',fmt(d.R,1)+' N');setM('fM2',fmt(S.F,1)+' N');
+      setM('fM3',S.done?fmt(d.Fs,1)+' N':'Run the test');setM('fM4',S.done?d.mu.toFixed(2):'—');setM('fM5',S.done?d.mud.toFixed(2):'—');
+      setW('friction',`Normal reaction R = m × g = ${fmt(d.m,1)} × 9.8 = <b>${fmt(d.R,1)} N</b><br>`+(S.done?`Peak gauge reading (limiting friction) = <b>${fmt(d.Fs,1)} N</b><br>μ (static) = F ÷ R = ${fmt(d.Fs,1)} ÷ ${fmt(d.R,1)} = <b>${d.mu.toFixed(2)}</b><br>Sliding reading (dynamic friction) ≈ <b>${fmt(d.Fd,1)} N</b> → μ (dynamic) = ${fmt(d.Fd,1)} ÷ ${fmt(d.R,1)} = <b>${d.mud.toFixed(2)}</b>`:'Run the pull test to collect your data, then μ = peak force ÷ R.'));},
+    draw(){const W=ctx.W,H=ctx.H,gy=H-96;sky(ctx);ground(ctx,gy,SURF[d.surf].g);
+      tag(ctx,SHOE[d.shoe].n+' on '+SURF[d.surf].n.toLowerCase(),W/2,24,C.text);
+      const sx=120+S.off,lift=drawShoe(sx,gy,d.shoe,d.m),toeX=sx+250,ty=gy-lift-14;
+      if(S.slip&&!S.done||S.slip&&S.off<150){ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=2;for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(sx-12-i*16,gy-6-i*5);ctx.lineTo(sx-50-i*16,gy-6-i*5);ctx.stroke();}}
+      // string + force gauge
+      const gx=toeX+150;ctx.strokeStyle='#e2e8f0';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(toeX-4,ty);ctx.lineTo(gx,ty);ctx.stroke();
+      ctx.fillStyle='#e2e8f0';roundRect(ctx,gx,ty-40,140,80,14);ctx.fill();ctx.fillStyle='#0b1630';ctx.beginPath();ctx.arc(gx+42,ty,30,0,Math.PI*2);ctx.fill();
+      const scale=Math.max(10,niceStep(d.Fs*1.3/4)*4),ang=-Math.PI*1.25+Math.min(1,S.F/scale)*Math.PI*1.5;
+      ctx.strokeStyle='rgba(255,255,255,.35)';ctx.lineWidth=2;for(let i=0;i<=8;i++){const a=-Math.PI*1.25+i/8*Math.PI*1.5;ctx.beginPath();ctx.moveTo(gx+42+Math.cos(a)*24,ty+Math.sin(a)*24);ctx.lineTo(gx+42+Math.cos(a)*29,ty+Math.sin(a)*29);ctx.stroke();}
+      ctx.strokeStyle='#ff5c74';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(gx+42,ty);ctx.lineTo(gx+42+Math.cos(ang)*24,ty+Math.sin(ang)*24);ctx.stroke();
+      ctx.fillStyle='#0b1630';ctx.font='800 15px '+FONT;ctx.textAlign='center';ctx.fillText(fmt(S.F,1)+' N',gx+105,ty+5);ctx.font='700 10px '+FONT;ctx.fillText('FORCE',gx+105,ty-14);ctx.fillText('GAUGE',gx+105,ty+22);ctx.textAlign='left';
+      // forces on the shoe
+      const k=Math.min(3.2,160/Math.max(d.Fs,1));
+      arrow(ctx,sx+125,gy+2,sx+125,gy-130,C.norm,'R = '+fmt(d.R,0)+' N',{lx:sx+135,ly:gy-150,align:'left'});
+      if(S.F>0.05){arrow(ctx,toeX+6,ty-24,toeX+6+S.F*k,ty-24,C.force,'Pull '+fmt(S.F,1)+' N',{lx:toeX+6+S.F*k/2,ly:ty-48});
+        const fr=S.slip?d.Fd:S.F;arrow(ctx,sx+235,gy+12,sx+235-fr*k,gy+12,C.fric,(S.slip?'Dynamic friction ':'Static friction ')+fmt(fr,1)+' N (on the sole)',{lx:sx+235-fr*k/2,ly:gy+40});}
+      if(S.started&&!S.slip)badge(ctx,'GRIPPING: static friction = pull',W/2,62,C.fric);
+      else if(S.slip)badge(ctx,'SLIPPING: pull exceeded limiting friction',W/2,62,C.force);
+      else tag(ctx,'Press "Start pulling": the pull increases steadily',W/2,62,C.dim);
+      const hide=predicting('friction')&&!S.done,ymax=Math.max(d.Fs,d.R*0.5,5)*1.3;
+      plot(gctx,{xMax:TEND,yMax:S.done?Math.max(ymax,d.R*1.1):ymax,xLabel:'Time (s)',yLabel:'Force gauge reading (N)',empty:S.started?null:'Start pulling to record the force–time trace',
+        series:[{pts:S.pts,color:GC.force,label:'Pull = friction while gripping'},...(S.done&&!hide?[{pts:[[0,d.R],[TEND,d.R]],color:GC.ink,dash:[6,5],width:2,label:'Normal reaction R'}]:[])],
+        labels:S.done?[{x:TSLIP,y:d.Fs,text:'Limiting friction '+fmt(d.Fs,1)+' N',color:GC.force},{x:TSLIP+1.1,y:d.Fd,text:'Dynamic friction ≈ '+fmt(d.Fd,1)+' N',color:GC.fric}]:[],markerX:S.started&&!S.done?S.t:null});},
+    run(){d=read();S.started=true;anim.start();},
+    predictAnswer(){const q=read();return Math.abs(q.mu-1)<0.02?'equal':q.mu>1?'greater':'less';}
+  };return api;}
+def({id:'friction',name:'Coefficient of Friction',icon:'👟',course:'ib',sport:'Shoe drag test: footwear and surfaces',
+  title:'Coefficient of friction',
+  def:'Friction opposes sliding between two surfaces. It grows to match the applied force until it reaches its limit (limiting friction = μ × R). The coefficient of friction μ depends only on the two surfaces in contact.',
+  formula:'μ = F ÷ R   (F = limiting friction, R = normal reaction)',stageTitle:'Shoe drag test',legend:['force','fric','norm'],
+  note:'This is the classic lab test: weights in the shoe provide the normal reaction, and a force gauge pulls with a steadily increasing force. On the field, the athlete\'s body weight provides R. μ values are illustrative typical values.',runLabel:'Start pulling',challenge:true,
+  controls:[
+    {type:'select',id:'fShoe',label:'Footwear',value:'court',options:[['court','Court shoe (flat rubber sole)'],['boot','Football boot (studs)'],['spike','Running spike'],['worn','Worn trainer (smooth tread)']]},
+    {type:'select',id:'fSurf',label:'Surface',value:'court',options:[['court','Clean indoor court'],['dusty','Dusty indoor court'],['grass','Dry grass'],['wet','Wet grass'],['track','Synthetic track']]},
+    {type:'range',id:'fLoad',label:'Load in the shoe (sets R)',min:1,max:20,step:0.5,value:5,unit:'kg',dp:1}],
+  presets:[
+    {label:'Court shoe on a clean court',set:{fShoe:'court',fSurf:'court',fLoad:5}},
+    {label:'Same shoe on a dusty court',set:{fShoe:'court',fSurf:'dusty',fLoad:5}},
+    {label:'Same shoe, double the load',set:{fShoe:'court',fSurf:'court',fLoad:10}},
+    {label:'Football boots on wet grass',set:{fShoe:'boot',fSurf:'wet',fLoad:5}},
+    {label:'Running spikes on a synthetic track',set:{fShoe:'spike',fSurf:'track',fLoad:5}}],
+  metrics:[{id:'fM1',label:'Normal reaction R'},{id:'fM2',label:'Gauge reading now'},{id:'fM3',label:'Limiting friction (peak)',hide:1},{id:'fM4',label:'<span style="text-transform:none">μ</span> static = F ÷ R',hide:1},{id:'fM5',label:'<span style="text-transform:none">μ</span> dynamic',hide:1}],
+  graph:{title:'Force–time trace from the gauge',note:'Rises while gripping, peaks at limiting friction, then drops when sliding starts'},
+  predict:{q:'Will the peak (limiting) friction be greater or less than the normal reaction R?',options:[['less','Less than R (μ < 1)'],['equal','About equal to R (μ ≈ 1)'],['greater','Greater than R (μ > 1)']]},
+  questions:[
+    {q:'The gauge reading peaks just before the shoe starts to slide. This peak is the…',opts:[['a','dynamic friction'],['b','limiting (maximum static) friction'],['c','normal reaction']],a:'b',hint:'Look at what happens on the graph just before the drop.',why:'Static friction matches the pull until it reaches its maximum value: limiting friction = μR.'},
+    {q:'Once the shoe is sliding, the force needed to keep it moving is…',opts:[['a','larger than the peak'],['b','smaller than the peak'],['c','the same as the peak']],a:'b',hint:'Compare the plateau after the drop with the peak.',why:'Dynamic (sliding) friction is smaller than limiting static friction, which is why the trace drops once sliding begins.'},
+    {q:'You double the load in the shoe. The coefficient of friction…',opts:[['a','doubles'],['b','halves'],['c','stays the same']],a:'c',hint:'Use the test log: compare R, the peak force and μ.',why:'R doubles and the peak friction doubles, so μ = F ÷ R is unchanged. μ depends only on the two surfaces.'},
+    {q:'Why do sprinters wear spikes on a synthetic track?',opts:[['a','To increase μ, so more horizontal force can be applied without slipping'],['b','To increase their normal reaction force'],['c','To reduce their mass']],a:'a',hint:'Compare spikes on the track with the other footwear.',why:'Spikes raise μ, increasing limiting friction (μR) so a larger horizontal push-off force can be applied without slipping.'}],
+  exam:[
+    {course:'ib',q:'In a drag test, a shoe loaded to a normal reaction of 49 N starts to slide when the force gauge reads 44 N. <span class="cmd">Calculate</span> the coefficient of friction.',marks:2,scheme:['μ = F ÷ R = 44 ÷ 49.','μ = 0.90 (no units).']},
+    {course:'ib',q:'<span class="cmd">Explain</span> why a netballer is more likely to slip when changing direction on a dusty court.',marks:2,scheme:['Dust reduces the coefficient of friction between the shoe and the court.','So limiting friction (μR) is lower, and the horizontal force needed to change direction is more likely to exceed it, causing a slip.']}],
+  sim:simFric()});
+
+/* =========================================================
+   INITIALISE
+   ========================================================= */
+const nav=$('nav'),panels=$('panels');
+TOPICS.forEach(T=>{const b=document.createElement('button');b.className='nav-item';b.id=T.id+'Nav';b.type='button';if(T.course==='ib')b.dataset.course='ib';
+  b.innerHTML=`<span class="nav-icon">${T.icon}</span><span class="nav-name">${T.name}</span><span class="nav-tick">✓</span>`;b.addEventListener('click',()=>activate(T.id));nav.appendChild(b);
+  const s=document.createElement('section');s.className='panel';s.id=T.id;if(T.course==='ib')s.dataset.course='ib';s.innerHTML=panelHTML(T);panels.appendChild(s);});
+const foot=document.createElement('div');foot.className='nav-foot';foot.innerHTML='✓ = all questions correct<br>Switch to IB for restitution and friction.';nav.appendChild(foot);
+TOPICS.forEach(T=>{bindTopic(T);T.controls.forEach(c=>refreshOut(c.id));refreshVis(T);T.sim.init(setupCanvas($(T.id+'Canvas'),900,380),T.graph?setupCanvas($(T.id+'Graph'),900,240):null);
+  if(T.presets){const i=T.presets.findIndex(p=>Object.entries(p.set).every(([k,v])=>String(v)===String($(k).value)));if(i>=0){$(T.id+'Preset').value=String(i);if(T.sim.onPreset)T.sim.onPreset(T.presets[i]);}}
+  T.sim.reset(true);T.sim.update();updatePredQ(T);markProgress(T);});
+$('vceBtn').addEventListener('click',()=>setView('vce'));$('ibBtn').addEventListener('click',()=>setView('ib'));
+$('teacherToggle').addEventListener('change',e=>document.body.classList.toggle('teacher',e.target.checked));
+setView(view);const saved=store.get('bmsTopic');activate(saved&&BY[saved]&&visible(BY[saved])?saved:TOPICS.find(visible).id);
+TOPICS.forEach(T=>T.sim.draw());
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>TOPICS.forEach(T=>T.sim.draw()));
+})();
+</script>
+</body>
+</html>
